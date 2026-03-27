@@ -1,0 +1,131 @@
+{
+  "_metadata": {
+    "description": "Global Space IXP — a hypothetical constellation of Internet Exchange Point satellites designed to interconnect disparate LEO constellations via inter-satellite links.",
+      "constellation_name": "Global Space IXP (theoretical)",
+    "operator": "Hypothetical / Reference Design",
+    "compiled": "2026-03-25",
+    "sources": [
+      "Derived from altitude analysis of Starlink, Kuiper, OneWeb, Telesat Lightspeed, IRIS², Guowang and Qianfan constellation parameters."
+    ],
+    "design_rationale": {
+      "altitude_selection": "800 km chosen to sit in the natural gap between the dense Starlink/Kuiper cluster (525–630 km) and the upper LEO constellations (880–1325 km). This minimises the maximum vertical separation to any LEO shell while avoiding the crowded altitude bands. Worst-case radial ISL distance: 275 km down to Starlink, 525 km up to Telesat.",
+      "inclination_selection": "86.4° near-polar orbit ensures every IXP orbit crosses all other constellation orbital planes regardless of their inclination (33°–98.98°). Matches OneWeb Gen-1 inclination for potential coordination.",
+      "walker_star_pattern": "Walker Star 48/6/1 — 6 planes with 30° RAAN spacing and a phase offset factor of 1. This yields equatorial ground-track cells of roughly 3 333 km (cross-track) × 5 027 km (along-track), giving a worst-case slant distance of ~3 000 km to the nearest IXP satellite from any point in LEO — well within demonstrated optical ISL range (≤ 5 000 km).",
+      "satellite_count": "48 satellites is the minimum Walker Star geometry that keeps worst-case ISL slant distance under ~3 000 km for the chosen altitude. Scaling to 72 (6×12) or 96 (8×12) improves redundancy and reduces handover frequency."
+    },
+    "notes": [
+      "This is a reference/hypothetical constellation for simulation purposes.",
+      "All IXP satellites are assumed to carry multi-beam optical ISL terminals capable of simultaneous links to satellites in different constellations.",
+      "The 800 km altitude provides ≤ 1.75 ms one-way radial propagation delay to any LEO shell between 525 and 1 325 km.",
+      "RAAN spacing of 30° (Walker Star) concentrates coverage in the hemisphere, providing better revisit than a 60° Walker Delta for polar orbits.",
+      "Phase offset F=1 staggers satellites between adjacent planes, improving cross-track coverage at the equator."
+    ]
+  },
+
+  "constellation": {
+    "total_satellites": 48,
+    "shells": [
+      {
+        "shell_id": "ixp-global",
+        "orbit_type": "LEO",
+        "altitude_km": 800,
+        "altitude_m": 800000,
+        "inclination_deg": 86.4,
+        "num_planes": 6,
+        "sats_per_plane": 8,
+        "walker_type": "star",
+        "walker_notation": "48/6/1",
+        "raan_spacing_deg": 30.0,
+        "phase_offset_deg": 7.5,
+        "planned_satellites": 48,
+        "status": "hypothetical",
+        "notes": "Single-shell near-polar Walker Star constellation. Crosses all other LEO constellation orbital planes. 30° RAAN spacing, 45° in-plane satellite spacing, 7.5° inter-plane phase offset."
+      }
+    ]
+  },
+
+  "physical_constants": {
+    "earth_radius_km": 6371.0,
+    "earth_radius_m": 6371000.0,
+    "earth_mu_m3_s2": 3.986004418e14,
+    "speed_of_light_m_s": 299792458.0
+  },
+
+  "derived_orbital_parameters": {
+    "description": "Pre-computed orbital parameters for the IXP shell",
+    "shells": [
+      {
+        "shell_id": "ixp-global",
+        "altitude_km": 800,
+        "semi_major_axis_km": 7171.0,
+        "orbital_period_minutes": 100.7,
+        "orbital_velocity_km_s": 7.46,
+        "ground_track_velocity_km_s": 6.62
+      }
+    ]
+  },
+
+  "isl_reach": {
+    "description": "Maximum line-of-sight ISL distance and one-way propagation delay from the IXP shell to each target constellation altitude.",
+    "targets": [
+      {
+        "target": "Starlink Gen2 (525 km)",
+        "altitude_km": 525,
+        "radial_separation_km": 275,
+        "max_los_distance_km": 5931,
+        "max_one_way_delay_ms": 19.8
+      },
+      {
+        "target": "Starlink Gen1 (550 km)",
+        "altitude_km": 550,
+        "radial_separation_km": 250,
+        "max_los_distance_km": 5995,
+        "max_one_way_delay_ms": 20.0
+      },
+      {
+        "target": "Kuiper (610 km)",
+        "altitude_km": 610,
+        "radial_separation_km": 190,
+        "max_los_distance_km": 6145,
+        "max_one_way_delay_ms": 20.5
+      },
+      {
+        "target": "Guowang Low (880 km)",
+        "altitude_km": 880,
+        "radial_separation_km": 80,
+        "max_los_distance_km": 6754,
+        "max_one_way_delay_ms": 22.5
+      },
+      {
+        "target": "Telesat Polar (1000 km)",
+        "altitude_km": 1000,
+        "radial_separation_km": 200,
+        "max_los_distance_km": 6998,
+        "max_one_way_delay_ms": 23.3
+      },
+      {
+        "target": "OneWeb / IRIS² LEO (1200 km)",
+        "altitude_km": 1200,
+        "radial_separation_km": 400,
+        "max_los_distance_km": 7382,
+        "max_one_way_delay_ms": 24.6
+      },
+      {
+        "target": "Telesat Inclined (1325 km)",
+        "altitude_km": 1325,
+        "radial_separation_km": 525,
+        "max_los_distance_km": 7609,
+        "max_one_way_delay_ms": 25.4
+      }
+    ]
+  },
+
+  "coverage_geometry": {
+    "description": "Coverage cell geometry at the equator for the Walker Star 48/6/1 constellation.",
+    "equatorial_cross_track_spacing_km": 3755,
+    "equatorial_along_track_spacing_km": 5632,
+    "worst_case_slant_to_nearest_ixp_km": 3384,
+    "worst_case_slant_delay_ms": 11.3,
+    "notes": "At higher latitudes the orbit planes converge, reducing cross-track spacing and improving coverage. Polar regions have excellent coverage due to orbital plane convergence."
+  }
+}

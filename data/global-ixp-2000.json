@@ -1,0 +1,144 @@
+{
+  "_metadata": {
+    "description": "Global Space IXP (2000 km) — a hypothetical constellation of Internet Exchange Point satellites above the LEO mega-constellation band, designed to provide a stable inter-constellation relay layer with longer contact windows.",
+    "constellation_name": "Global Space IXP 2000 (theoretical)",
+    "operator": "Hypothetical / Reference Design",
+    "compiled": "2026-03-25",
+    "sources": [
+      "Derived from altitude analysis of Starlink, Kuiper, OneWeb, Telesat Lightspeed, IRIS², Guowang and Qianfan constellation parameters."
+    ],
+    "design_rationale": {
+      "altitude_selection": "2000 km places the IXP above all LEO constellations (highest: Telesat at 1325 km). This provides longer contact windows to lower-altitude satellites (slower relative angular velocity), a larger per-satellite coverage footprint, and a clear separation from the congested LEO band. Trade-off: 675–1475 km radial ISL to LEO shells, increasing latency.",
+      "inclination_selection": "86.4° near-polar orbit ensures every IXP orbit crosses all other constellation orbital planes regardless of their inclination (33°–98.98°).",
+      "walker_star_pattern": "Walker Star 48/6/1 — 6 planes with 30° RAAN spacing and a phase offset factor of 1. At 2000 km the equatorial coverage cells are ~4 383 km (cross-track) × 6 575 km (along-track), yielding worst-case slant distance of ~3 951 km — still within optical ISL range."
+    },
+    "notes": [
+      "This is a reference/hypothetical constellation for simulation purposes.",
+      "All IXP satellites are assumed to carry multi-beam optical ISL terminals capable of simultaneous links to satellites in different constellations.",
+      "2000 km altitude is above all current LEO filings, reducing collision risk and orbital crowding concerns.",
+      "Longer orbital period (127.0 min vs 100.7 at 800 km) means slower ground-track velocity and longer ground-station contact windows.",
+      "Higher altitude increases per-satellite footprint but adds ~6–10 ms one-way latency compared to the 800 km IXP variant."
+    ]
+  },
+
+  "constellation": {
+    "total_satellites": 48,
+    "shells": [
+      {
+        "shell_id": "ixp-2000",
+        "orbit_type": "LEO",
+        "altitude_km": 2000,
+        "altitude_m": 2000000,
+        "inclination_deg": 86.4,
+        "num_planes": 6,
+        "sats_per_plane": 8,
+        "walker_type": "star",
+        "walker_notation": "48/6/1",
+        "raan_spacing_deg": 30.0,
+        "phase_offset_deg": 7.5,
+        "planned_satellites": 48,
+        "status": "hypothetical",
+        "notes": "Single-shell near-polar Walker Star constellation at 2000 km. Above all LEO mega-constellations, providing stable relay with longer contact windows."
+      }
+    ]
+  },
+
+  "physical_constants": {
+    "earth_radius_km": 6371.0,
+    "earth_radius_m": 6371000.0,
+    "earth_mu_m3_s2": 3.986004418e14,
+    "speed_of_light_m_s": 299792458.0
+  },
+
+  "derived_orbital_parameters": {
+    "description": "Pre-computed orbital parameters for the IXP shell",
+    "shells": [
+      {
+        "shell_id": "ixp-2000",
+        "altitude_km": 2000,
+        "semi_major_axis_km": 8371.0,
+        "orbital_period_minutes": 127.0,
+        "orbital_velocity_km_s": 6.90,
+        "ground_track_velocity_km_s": 5.25
+      }
+    ]
+  },
+
+  "isl_reach": {
+    "description": "Maximum line-of-sight ISL distance and one-way propagation delay from the IXP shell to each target constellation altitude.",
+    "targets": [
+      {
+        "target": "Starlink Gen2 (525 km)",
+        "altitude_km": 525,
+        "radial_separation_km": 1475,
+        "max_los_distance_km": 8069,
+        "max_one_way_delay_ms": 26.9
+      },
+      {
+        "target": "Starlink Gen1 (550 km)",
+        "altitude_km": 550,
+        "radial_separation_km": 1450,
+        "max_los_distance_km": 8134,
+        "max_one_way_delay_ms": 27.1
+      },
+      {
+        "target": "Kuiper (610 km)",
+        "altitude_km": 610,
+        "radial_separation_km": 1390,
+        "max_los_distance_km": 8284,
+        "max_one_way_delay_ms": 27.6
+      },
+      {
+        "target": "Global IXP 800 (800 km)",
+        "altitude_km": 800,
+        "radial_separation_km": 1200,
+        "max_los_distance_km": 8721,
+        "max_one_way_delay_ms": 29.1
+      },
+      {
+        "target": "Guowang Low (880 km)",
+        "altitude_km": 880,
+        "radial_separation_km": 1120,
+        "max_los_distance_km": 8892,
+        "max_one_way_delay_ms": 29.7
+      },
+      {
+        "target": "Telesat Polar (1000 km)",
+        "altitude_km": 1000,
+        "radial_separation_km": 1000,
+        "max_los_distance_km": 9137,
+        "max_one_way_delay_ms": 30.5
+      },
+      {
+        "target": "OneWeb / IRIS² LEO (1200 km)",
+        "altitude_km": 1200,
+        "radial_separation_km": 800,
+        "max_los_distance_km": 9520,
+        "max_one_way_delay_ms": 31.8
+      },
+      {
+        "target": "Telesat Inclined (1325 km)",
+        "altitude_km": 1325,
+        "radial_separation_km": 675,
+        "max_los_distance_km": 9747,
+        "max_one_way_delay_ms": 32.5
+      },
+      {
+        "target": "Global IXP 1200 (1200 km)",
+        "altitude_km": 1200,
+        "radial_separation_km": 800,
+        "max_los_distance_km": 9520,
+        "max_one_way_delay_ms": 31.8
+      }
+    ]
+  },
+
+  "coverage_geometry": {
+    "description": "Coverage cell geometry at the equator for the Walker Star 48/6/1 constellation at 2000 km.",
+    "equatorial_cross_track_spacing_km": 4383,
+    "equatorial_along_track_spacing_km": 6575,
+    "worst_case_slant_to_nearest_ixp_km": 3951,
+    "worst_case_slant_delay_ms": 13.2,
+    "notes": "At higher latitudes the orbit planes converge, reducing cross-track spacing and improving coverage. Polar regions have excellent coverage due to orbital plane convergence. The larger footprint at 2000 km means each IXP satellite can serve more LEO satellites simultaneously."
+  }
+}
