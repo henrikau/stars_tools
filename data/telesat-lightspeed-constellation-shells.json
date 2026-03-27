@@ -1,0 +1,106 @@
+{
+  "_metadata": {
+    "description": "Telesat Lightspeed constellation orbital parameters compiled from Wikipedia and public announcements.",
+    "constellation_name": "Telesat Lightspeed",
+    "operator": "Telesat Corporation",
+    "headquarters": "Ottawa, Ontario, Canada",
+    "compiled": "2026-03-25",
+    "sources": [
+      "https://en.wikipedia.org/wiki/Telesat",
+      "SpaceNews reporting on Telesat LEO constellation"
+    ],
+    "notes": [
+      "Originally announced as 120 satellites in 2016, expanded to ~300 in 2017, then 1,600+ in 2020.",
+      "Current configuration: 198 satellites (14 SpaceX Falcon 9 launches, up to 18 satellites each).",
+      "Manufacturer switched from Thales Alenia Space to MDA in August 2023 (saving ~$2 billion).",
+      "Phase 1 pathfinder test satellite launched 2018; LEO 3 demonstration satellite launched July 2023.",
+      "SpaceX contracted for 14 Lightspeed launches starting mid-2026.",
+      "Customers: Viasat, Space Norway, Orange, ADN Telecom.",
+      "Ka-band system."
+    ]
+  },
+  "constellation": {
+    "description": "Telesat Lightspeed LEO broadband constellation",
+    "planned_satellites": 198,
+    "original_planned_2016": 120,
+    "expanded_planned_2017": 300,
+    "expanded_planned_2020": 1600,
+    "shells": [
+      {
+        "shell_id": "lightspeed-polar",
+        "orbit_type": "polar",
+        "altitude_km": 1000,
+        "altitude_m": 1000000,
+        "inclination_deg": 98.98,
+        "num_planes": 6,
+        "sats_per_plane": 13,
+        "planned_satellites": 78,
+        "status": "planned",
+        "notes": "Polar orbit shell for global coverage including polar regions. Inclination ~99 deg (sun-synchronous/near-polar)."
+      },
+      {
+        "shell_id": "lightspeed-inclined",
+        "orbit_type": "inclined",
+        "altitude_km": 1325,
+        "altitude_m": 1325000,
+        "inclination_deg": 50.88,
+        "num_planes": 5,
+        "sats_per_plane": 24,
+        "planned_satellites": 120,
+        "status": "planned",
+        "notes": "Inclined orbit shell for mid-latitude coverage. Provides higher capacity over populated regions."
+      }
+    ]
+  },
+  "physical_constants": {
+    "earth_radius_km": 6371.0,
+    "earth_radius_m": 6371000.0,
+    "earth_mu_m3_s2": 398600441800000.0,
+    "speed_of_light_m_s": 299792458.0
+  },
+  "derived_orbital_parameters": {
+    "description": "Pre-computed orbital parameters for each shell",
+    "shells": [
+      {
+        "shell_id": "lightspeed-polar",
+        "altitude_km": 1000,
+        "semi_major_axis_km": 7371.0,
+        "orbital_period_minutes": 105.0,
+        "orbital_velocity_km_s": 7.35,
+        "ground_track_velocity_km_s": 6.36
+      },
+      {
+        "shell_id": "lightspeed-inclined",
+        "altitude_km": 1325,
+        "semi_major_axis_km": 7696.0,
+        "orbital_period_minutes": 112.0,
+        "orbital_velocity_km_s": 7.2,
+        "ground_track_velocity_km_s": 5.96
+      }
+    ]
+  },
+  "satellite_hardware": {
+    "mass_kg": 800,
+    "design_lifetime_years": 10,
+    "manufacturer": "MDA (formerly contracted to Thales Alenia Space)",
+    "propulsion": "electric propulsion",
+    "inter_satellite_links": true,
+    "isl_type": "optical (laser)",
+    "bands": [
+      "Ka"
+    ],
+    "notes": "Satellites equipped with optical ISL for mesh networking."
+  },
+  "system_performance": {
+    "total_capacity_tbps": 16,
+    "customer_capacity_tbps": 8,
+    "latency_ms_range": [
+      30,
+      50
+    ],
+    "notes": "16-24 Tb/s total system capacity; ~8 Tb/s available for customers."
+  },
+  "launch_vehicles": [
+    "Falcon 9"
+  ]
+}

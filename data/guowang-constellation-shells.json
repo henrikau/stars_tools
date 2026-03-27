@@ -1,0 +1,125 @@
+{
+  "_metadata": {
+    "description": "Guowang (SatNet) constellation orbital shell parameters compiled from Wikipedia and launch tracking data.",
+    "constellation_name": "Guowang",
+    "chinese_name": "\u56fd\u7f51 (Gu\u00f3w\u01ceng, 'National Network')",
+    "official_name": "Satellite Internet Series Satellites (\u536b\u661f\u4e92\u8054\u7f51\u7cfb\u5217\u536b\u661f)",
+    "operator": "China SatNet (backed by CAST / CASIC)",
+    "compiled": "2026-03-25",
+    "sources": [
+      "https://en.wikipedia.org/wiki/Guowang",
+      "https://spacenews.com/china-is-developing-plans-for-a-13000-satellite-communications-megaconstellation"
+    ],
+    "notes": [
+      "Planned total: over 13,000 satellites.",
+      "Approximately 6,000 satellites expected at 500-600 km (comparable to Starlink), ~7,000 at higher orbit ~1,145 km.",
+      "All operational LEO satellites launched so far are in the higher orbit regime (~1,150-1,175 km).",
+      "Also includes GEO relay satellites (Hulianwang Gaogui series).",
+      "Believed to have both civilian and military applications.",
+      "Launch cadence has accelerated significantly in 2025."
+    ]
+  },
+  "constellation": {
+    "total_planned_satellites": 13000,
+    "lower_orbit_planned": {
+      "altitude_km_range": [
+        500,
+        600
+      ],
+      "approximate_satellites": 6000,
+      "status": "not yet deployed",
+      "notes": "Comparable to Starlink altitude range. No launches to this shell as of early 2026."
+    },
+    "higher_orbit_shells": [
+      {
+        "shell_id": "guowang-polar",
+        "orbit_type": "polar",
+        "altitude_km": 1175,
+        "altitude_m": 1175000,
+        "inclination_deg": 86.5,
+        "num_planes": null,
+        "sats_per_plane": null,
+        "planned_satellites": null,
+        "launched_satellites": 50,
+        "status": "deploying",
+        "notes": "Near-polar shell. Launches: Groups 01, 03, 04, 05, 08, 09, 15. Satellites launched by Long March 5B/YZ-2 (10 sats) and Long March 6A (5 sats)."
+      },
+      {
+        "shell_id": "guowang-inclined",
+        "orbit_type": "inclined",
+        "altitude_km": 1156,
+        "altitude_m": 1156000,
+        "inclination_deg": 50.0,
+        "num_planes": null,
+        "sats_per_plane": null,
+        "planned_satellites": null,
+        "launched_satellites": 108,
+        "status": "deploying",
+        "notes": "Inclined orbit shell. Launches: Groups 02, 06, 07, 10, 12, 13, 14, 16, 17, 18, 19. Satellites launched by Long March 8A (9 sats) and Long March 12 (9 sats)."
+      },
+      {
+        "shell_id": "guowang-inclined-low",
+        "orbit_type": "inclined",
+        "altitude_km": 880,
+        "altitude_m": 880000,
+        "inclination_deg": 50.0,
+        "num_planes": null,
+        "sats_per_plane": null,
+        "planned_satellites": null,
+        "launched_satellites": 9,
+        "status": "deploying",
+        "notes": "Third observed altitude. Group 20 (Hulianwang 155-163) deployed to 880 km, 50.0 deg in March 2026."
+      }
+    ],
+    "geo_relay_satellites": {
+      "description": "Geostationary relay satellites (Hulianwang Gaogui series)",
+      "launched": 3,
+      "status": "operational",
+      "notes": "Three GEO satellites launched 2024 (Feb, Aug, Oct) for high-orbit relay capability."
+    }
+  },
+  "physical_constants": {
+    "earth_radius_km": 6371.0,
+    "earth_radius_m": 6371000.0,
+    "earth_mu_m3_s2": 398600441800000.0,
+    "speed_of_light_m_s": 299792458.0
+  },
+  "derived_orbital_parameters": {
+    "description": "Pre-computed orbital parameters for each shell",
+    "shells": [
+      {
+        "shell_id": "guowang-polar",
+        "altitude_km": 1175,
+        "semi_major_axis_km": 7546.0,
+        "orbital_period_minutes": 108.7,
+        "orbital_velocity_km_s": 7.27,
+        "ground_track_velocity_km_s": 6.14
+      },
+      {
+        "shell_id": "guowang-inclined",
+        "altitude_km": 1156,
+        "semi_major_axis_km": 7527.0,
+        "orbital_period_minutes": 108.3,
+        "orbital_velocity_km_s": 7.28,
+        "ground_track_velocity_km_s": 6.16
+      },
+      {
+        "shell_id": "guowang-inclined-low",
+        "altitude_km": 880,
+        "semi_major_axis_km": 7251.0,
+        "orbital_period_minutes": 102.4,
+        "orbital_velocity_km_s": 7.41,
+        "ground_track_velocity_km_s": 6.51
+      }
+    ]
+  },
+  "launch_vehicles": [
+    "Long March 5B / YZ-2",
+    "Long March 8A",
+    "Long March 12",
+    "Long March 6A",
+    "Long March 2C / YZ-1S",
+    "Long March 2D",
+    "Long March 3B/E"
+  ]
+}

@@ -1,0 +1,91 @@
+{
+  "_metadata": {
+    "description": "Qianfan (Thousand Sails / G60 Starlink) constellation orbital parameters compiled from Wikipedia and SpaceNews.",
+    "constellation_name": "Qianfan",
+    "chinese_name": "\u5343\u5e06\u661f\u5ea7 (Qi\u0101nf\u0101n x\u012bngzu\u00f2, 'Thousand Sails Constellation')",
+    "alternative_names": [
+      "Spacesail Constellation",
+      "G60 Starlink"
+    ],
+    "operator": "Shanghai Spacecom Satellite Technology (SSST)",
+    "backers": [
+      "Shanghai Municipal Government",
+      "Chinese Academy of Sciences"
+    ],
+    "compiled": "2026-03-25",
+    "sources": [
+      "https://en.wikipedia.org/wiki/Qianfan",
+      "https://spacenews.com/china-launches-first-satellites-for-thousand-sails-megaconstellation/"
+    ],
+    "notes": [
+      "Total planned: over 15,000 satellites.",
+      "Phase 1: 1,296 satellites; 648 to be deployed by end of 2025 for regional coverage.",
+      "First launch: 6 August 2024 (18 satellites, polar orbit).",
+      "Operates in Ku, Q, and V bands.",
+      "Detailed per-shell orbital parameters (altitude, inclination breakdown) not fully disclosed publicly.",
+      "All launches so far have been to polar orbits.",
+      "Wikipedia launch data does not specify altitude or inclination for individual Qianfan launches.",
+      "Estimated operational altitude ~1,200 km based on ITU filings (comparable to OneWeb and Guowang higher shell)."
+    ]
+  },
+  "constellation": {
+    "total_planned_satellites": 15000,
+    "phase1_satellites": 1296,
+    "phase1_regional_coverage": 648,
+    "shells": [
+      {
+        "shell_id": "qianfan-polar",
+        "orbit_type": "polar",
+        "altitude_km": 1200,
+        "altitude_m": 1200000,
+        "inclination_deg": null,
+        "num_planes": null,
+        "sats_per_plane": null,
+        "planned_satellites": null,
+        "launched_satellites": 119,
+        "status": "deploying",
+        "notes": "All launches to date have been to polar orbits. Altitude estimated ~1,200 km based on ITU filings. Exact inclination not specified in Wikipedia data. Launched primarily using Long March 6A (18 sats) and Long March 8 (18 sats)."
+      }
+    ],
+    "future_shells": {
+      "description": "The full 15,000-satellite constellation will likely include multiple altitude shells and inclinations, but detailed shell breakdown is not publicly available.",
+      "status": "planned"
+    }
+  },
+  "physical_constants": {
+    "earth_radius_km": 6371.0,
+    "earth_radius_m": 6371000.0,
+    "earth_mu_m3_s2": 398600441800000.0,
+    "speed_of_light_m_s": 299792458.0
+  },
+  "derived_orbital_parameters": {
+    "description": "Pre-computed orbital parameters (estimated altitude)",
+    "shells": [
+      {
+        "shell_id": "qianfan-polar",
+        "altitude_km": 1200,
+        "semi_major_axis_km": 7571.0,
+        "orbital_period_minutes": 109.3,
+        "orbital_velocity_km_s": 7.26,
+        "ground_track_velocity_km_s": 6.11,
+        "notes": "Altitude estimated; may differ from actual operational altitude."
+      }
+    ]
+  },
+  "satellite_hardware": {
+    "type": "flat-panel satellite",
+    "mass_kg": null,
+    "bands": [
+      "Ku",
+      "Q",
+      "V"
+    ],
+    "inter_satellite_links": null,
+    "manufacturer": "Shanghai Gesi Aerospace Technology (Genesat)",
+    "notes": "First flat-panel satellite assembled December 2023."
+  },
+  "launch_vehicles": [
+    "Long March 6A",
+    "Long March 8"
+  ]
+}

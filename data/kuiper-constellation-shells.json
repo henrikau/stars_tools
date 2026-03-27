@@ -1,0 +1,175 @@
+{
+  "_metadata": {
+    "description": "Amazon Leo (formerly Project Kuiper) constellation orbital shell parameters compiled from FCC filings and Wikipedia.",
+    "constellation_name": "Amazon Leo",
+    "former_name": "Project Kuiper",
+    "operator": "Amazon (Kuiper Systems LLC)",
+    "compiled": "2026-03-25",
+    "sources": [
+      "https://en.wikipedia.org/wiki/Amazon_Leo",
+      "FCC filing SAT-LOA-20190704-00057",
+      "FCC Order FCC-20-102 (authorization, 2020-07-29)"
+    ],
+    "notes": [
+      "FCC authorized 3,236 satellites across 3 orbital shells in 98 orbital planes (July 2020).",
+      "Shell 1: 590 km, 33.0 deg, 28 planes x 28 sats = 784. Shell 2: 610 km, 42.0 deg, 36 planes x 36 sats = 1296. Shell 3: 630 km, 51.9 deg, 34 planes x 34 sats = 1156.",
+      "Phase 1 deploys 578 satellites at 630 km, 51.9 deg inclination.",
+      "Five deployment phases planned; half must be deployed by July 30, 2026, remainder by July 30, 2029.",
+      "Rebranded from 'Project Kuiper' to 'Amazon Leo' in November 2025.",
+      "Investment: over $10 billion.",
+      "All production launches so far have been to 630 km LEO."
+    ]
+  },
+  "constellation": {
+    "total_authorized_satellites": 3236,
+    "total_orbital_planes": 98,
+    "shells": [
+      {
+        "shell_id": "kuiper-shell1",
+        "altitude_km": 590,
+        "altitude_m": 590000,
+        "inclination_deg": 33.0,
+        "num_planes": 28,
+        "sats_per_plane": 28,
+        "planned_satellites": 784,
+        "status": "not yet deployed",
+        "notes": "Lowest shell. Per FCC filing SAT-LOA-20190704-00057."
+      },
+      {
+        "shell_id": "kuiper-shell2",
+        "altitude_km": 610,
+        "altitude_m": 610000,
+        "inclination_deg": 42.0,
+        "num_planes": 36,
+        "sats_per_plane": 36,
+        "planned_satellites": 1296,
+        "status": "not yet deployed",
+        "notes": "Middle shell. Per FCC filing SAT-LOA-20190704-00057."
+      },
+      {
+        "shell_id": "kuiper-shell3",
+        "altitude_km": 630,
+        "altitude_m": 630000,
+        "inclination_deg": 51.9,
+        "num_planes": 34,
+        "sats_per_plane": 34,
+        "planned_satellites": 1156,
+        "status": "deploying",
+        "notes": "Highest shell and Phase 1 deployment target. 578 satellites in Phase 1. All production launches to date target this shell. Per FCC filing SAT-LOA-20190704-00057."
+      }
+    ]
+  },
+  "deployment_phases": [
+    {
+      "phase": 1,
+      "satellites": 578,
+      "altitude_km": 630,
+      "inclination_deg": 51.9,
+      "status": "deploying",
+      "notes": "Initial service expected after Phase 1 completion."
+    },
+    {
+      "phase": 2,
+      "satellites": null,
+      "status": "planned"
+    },
+    {
+      "phase": 3,
+      "satellites": null,
+      "status": "planned"
+    },
+    {
+      "phase": 4,
+      "satellites": null,
+      "status": "planned"
+    },
+    {
+      "phase": 5,
+      "satellites": null,
+      "status": "planned"
+    }
+  ],
+  "physical_constants": {
+    "earth_radius_km": 6371.0,
+    "earth_radius_m": 6371000.0,
+    "earth_mu_m3_s2": 398600441800000.0,
+    "speed_of_light_m_s": 299792458.0
+  },
+  "derived_orbital_parameters": {
+    "description": "Pre-computed orbital parameters for each shell",
+    "shells": [
+      {
+        "shell_id": "kuiper-shell1",
+        "altitude_km": 590,
+        "inclination_deg": 33.0,
+        "semi_major_axis_km": 6961.0,
+        "orbital_period_minutes": 96.3,
+        "orbital_velocity_km_s": 7.57,
+        "ground_track_velocity_km_s": 6.93
+      },
+      {
+        "shell_id": "kuiper-shell2",
+        "altitude_km": 610,
+        "inclination_deg": 42.0,
+        "semi_major_axis_km": 6981.0,
+        "orbital_period_minutes": 96.7,
+        "orbital_velocity_km_s": 7.56,
+        "ground_track_velocity_km_s": 6.9
+      },
+      {
+        "shell_id": "kuiper-shell3",
+        "altitude_km": 630,
+        "inclination_deg": 51.9,
+        "semi_major_axis_km": 7001.0,
+        "orbital_period_minutes": 97.2,
+        "orbital_velocity_km_s": 7.55,
+        "ground_track_velocity_km_s": 6.87
+      }
+    ]
+  },
+  "satellite_hardware": {
+    "mass_kg": null,
+    "propulsion": "Hall-effect thruster",
+    "inter_satellite_links": true,
+    "isl_type": "optical (OISL)",
+    "isl_speed_gbps": 100,
+    "isl_max_range_km": 2600,
+    "isl_demonstrated_range_km": 1000,
+    "bands": [
+      "Ka"
+    ],
+    "antenna_type": "phased-array",
+    "notes": "OISL tested at 100 Gbps over 1,000 km; designed for up to 2,600 km range."
+  },
+  "user_terminals": [
+    {
+      "name": "Leo Nano",
+      "dimensions": "7 inch square",
+      "weight_lb": 2.2,
+      "max_download_mbps": 100,
+      "target_market": "residential, mobility"
+    },
+    {
+      "name": "Leo Pro",
+      "dimensions": "11 inch square",
+      "weight_lb": 5.3,
+      "max_download_mbps": 400,
+      "target_market": "standard"
+    },
+    {
+      "name": "Leo Ultra",
+      "dimensions": "20x30 inches",
+      "weight_lb": null,
+      "max_download_mbps": 1000,
+      "max_upload_mbps": 400,
+      "target_market": "enterprise, high-bandwidth"
+    }
+  ],
+  "launch_vehicles": [
+    "Atlas V",
+    "Falcon 9",
+    "Ariane 6",
+    "Vulcan Centaur",
+    "New Glenn"
+  ]
+}

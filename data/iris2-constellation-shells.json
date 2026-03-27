@@ -1,0 +1,88 @@
+{
+  "_metadata": {
+    "description": "IRIS² (Infrastructure for Resilience, Interconnectivity and Security by Satellite) constellation orbital parameters compiled from Wikipedia and EU press releases.",
+    "constellation_name": "IRIS²",
+    "full_name": "Infrastructure for Resilience, Interconnectivity and Security by Satellite",
+    "operator": "European Union (EUSPA / ESA)",
+    "consortium": "SpaceRISE (SES, Eutelsat, Hispasat)",
+    "compiled": "2026-03-25",
+    "sources": [
+      "https://en.wikipedia.org/wiki/IRIS%C2%B2",
+      "European Commission press releases"
+    ],
+    "notes": [
+      "Multi-orbit constellation (LEO + MEO) for secure government communications and broadband for citizens.",
+      "Cost: approximately €10.5 billion (€6.5 billion public funds).",
+      "Government services expected by 2030.",
+      "Prime contractor shortlist: Airbus vs Aerospacelab (decision expected by end 2025).",
+      "Detailed orbital parameters (inclinations, number of planes) are NOT publicly specified as of early 2026.",
+      "IRIS² is the EU's sovereign connectivity constellation, independent of US/Chinese systems.",
+      "Launch vehicles: expected to use Ariane 6."
+    ]
+  },
+
+  "constellation": {
+    "total_satellites": 290,
+    "shells": [
+      {
+        "shell_id": "iris2-leo",
+        "orbit_type": "LEO",
+        "altitude_km": 1200,
+        "altitude_m": 1200000,
+        "inclination_deg": null,
+        "num_planes": null,
+        "sats_per_plane": null,
+        "planned_satellites": 264,
+        "status": "planned",
+        "notes": "LEO layer; altitude reported as ~1,200 km. Inclination and plane configuration not yet publicly disclosed."
+      },
+      {
+        "shell_id": "iris2-meo",
+        "orbit_type": "MEO",
+        "altitude_km": 8000,
+        "altitude_m": 8000000,
+        "inclination_deg": null,
+        "num_planes": null,
+        "sats_per_plane": null,
+        "planned_satellites": 18,
+        "status": "planned",
+        "notes": "MEO layer at ~8,000 km. Provides coverage complementary to LEO layer. Detailed orbital parameters not public."
+      }
+    ]
+  },
+
+  "physical_constants": {
+    "earth_radius_km": 6371.0,
+    "earth_radius_m": 6371000.0,
+    "earth_mu_m3_s2": 3.986004418e14,
+    "speed_of_light_m_s": 299792458.0
+  },
+
+  "derived_orbital_parameters": {
+    "description": "Pre-computed orbital parameters for each shell",
+    "shells": [
+      {
+        "shell_id": "iris2-leo",
+        "altitude_km": 1200,
+        "semi_major_axis_km": 7571.0,
+        "orbital_period_minutes": 109.3,
+        "orbital_velocity_km_s": 7.26,
+        "ground_track_velocity_km_s": 6.11
+      },
+      {
+        "shell_id": "iris2-meo",
+        "altitude_km": 8000,
+        "semi_major_axis_km": 14371.0,
+        "orbital_period_minutes": 285.8,
+        "orbital_velocity_km_s": 5.27,
+        "ground_track_velocity_km_s": 2.33
+      }
+    ]
+  },
+
+  "services": {
+    "government": "Secure sovereign communications for EU member states",
+    "commercial": "Broadband internet for EU citizens, including underserved areas",
+    "notes": "Multi-purpose: resilience, interconnectivity, and security."
+  }
+}

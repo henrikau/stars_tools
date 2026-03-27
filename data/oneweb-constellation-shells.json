@@ -1,0 +1,98 @@
+{
+  "_metadata": {
+    "description": "Eutelsat OneWeb constellation orbital shell parameters compiled from Wikipedia and public filings.",
+    "constellation_name": "Eutelsat OneWeb",
+    "former_name": "OneWeb",
+    "operator": "Eutelsat Group (formerly OneWeb Ltd)",
+    "compiled": "2026-03-25",
+    "sources": [
+      "https://en.wikipedia.org/wiki/OneWeb_satellite_constellation",
+      "FCC filing (OneWeb Gen2, Jan 2021)"
+    ],
+    "notes": [
+      "Gen 1 constellation completed in late 2024 with 648 satellites (600 active + 48 in-orbit spares).",
+      "OneWeb merged with Eutelsat in September 2023, forming 'Eutelsat Group'.",
+      "Gen 1 satellites have NO inter-satellite links; traffic is routed through gateway ground stations.",
+      "Gen 2 constellation of up to 6,372 satellites filed with FCC in January 2021.",
+      "Gen 2 test satellite 'JoeySat' launched May 2023.",
+      "Satellites built by OneWeb Satellites, a joint venture of Airbus and OneWeb."
+    ]
+  },
+  "gen1": {
+    "description": "First-generation OneWeb constellation",
+    "total_satellites": 648,
+    "active_satellites": 600,
+    "spare_satellites": 48,
+    "shells": [
+      {
+        "shell_id": "oneweb-gen1",
+        "altitude_km": 1200,
+        "altitude_m": 1200000,
+        "inclination_deg": 86.4,
+        "orbit_type": "near-polar",
+        "num_planes": 12,
+        "sats_per_plane": 49,
+        "planned_satellites": 588,
+        "total_with_spares": 648,
+        "spare_satellites": 48,
+        "status": "operational",
+        "notes": "Originally planned 18 planes x 49 sats (882 total); reduced to 12 planes during restructuring. Near-polar orbit provides near-global coverage."
+      }
+    ]
+  },
+  "gen2": {
+    "description": "Second-generation OneWeb constellation (planned)",
+    "total_requested_satellites": 6372,
+    "shells": [
+      {
+        "shell_id": "oneweb-gen2",
+        "altitude_km": null,
+        "inclination_deg": null,
+        "planned_satellites": 6372,
+        "status": "planned",
+        "notes": "FCC filing January 2021 for up to 6,372 Gen2 satellites. Orbital parameters not fully public. Gen2 satellites expected to include ISL capability."
+      }
+    ]
+  },
+  "physical_constants": {
+    "earth_radius_km": 6371.0,
+    "earth_radius_m": 6371000.0,
+    "earth_mu_m3_s2": 398600441800000.0,
+    "speed_of_light_m_s": 299792458.0
+  },
+  "derived_orbital_parameters": {
+    "description": "Pre-computed orbital parameters for Gen1 shell",
+    "shells": [
+      {
+        "shell_id": "oneweb-gen1",
+        "altitude_km": 1200,
+        "semi_major_axis_km": 7571.0,
+        "orbital_period_minutes": 109.3,
+        "orbital_velocity_km_s": 7.26,
+        "ground_track_velocity_km_s": 6.11
+      }
+    ]
+  },
+  "satellite_hardware": {
+    "gen1": {
+      "mass_kg": 150,
+      "propulsion": "electric propulsion",
+      "inter_satellite_links": false,
+      "bands_user": [
+        "Ku"
+      ],
+      "bands_gateway": [
+        "Ka"
+      ],
+      "design_lifetime_years": 5,
+      "manufacturer": "OneWeb Satellites (Airbus/OneWeb JV)",
+      "notes": "No ISL; all traffic routed through gateway ground stations. Ku-band user beams, Ka-band gateway feeder links."
+    },
+    "gen2": {
+      "mass_kg": 500,
+      "inter_satellite_links": true,
+      "status": "planned",
+      "notes": "JoeySat test satellite (~500 kg) launched May 2023."
+    }
+  }
+}

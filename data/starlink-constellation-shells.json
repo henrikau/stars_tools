@@ -1,0 +1,460 @@
+{
+  "_metadata": {
+    "description": "Starlink constellation orbital shell parameters compiled from FCC filings, Wikipedia, and Jonathan McDowell's space tracking data (planet4589.org).",
+    "compiled": "2026-03-25",
+    "sources": [
+      "https://en.wikipedia.org/wiki/Starlink",
+      "https://planet4589.org/space/con/star/stats.html",
+      "FCC Order FCC-22-91A1 (Gen2 authorization, 2022-12-01)",
+      "FCC filing SAT-MOD-20181108-00083 (Gen1 shell modification)",
+      "FCC filing SAT-LOA-20200526-00055 / SAT-AMD-20210818-00105 (Gen2)"
+    ],
+    "notes": [
+      "Altitudes are nominal/licensed values; actual operational altitudes may differ by -50 to +70 km.",
+      "Gen1 shells were originally at 1100-1325 km; SpaceX requested and received approval to lower them all to ~540-570 km.",
+      "Gen2 Phase 1 is FCC-limited to 7,500 satellites across 3 shells (2,500 each).",
+      "In January 2026, SpaceX announced plans to lower ~4,400 satellites from 550 km to 480 km.",
+      "Total authorized Gen2 satellites: up to 7,500 (phase 1); SpaceX requested up to 29,988 total."
+    ]
+  },
+  "gen1": {
+    "description": "First-generation Starlink constellation (v0.9, v1.0, v1.5 satellite buses)",
+    "total_authorized_satellites": 4408,
+    "shells": [
+      {
+        "shell_id": "gen1-shell1",
+        "group": "Group 1",
+        "altitude_km": 550,
+        "altitude_m": 550000,
+        "inclination_deg": 53.0,
+        "num_planes": 72,
+        "sats_per_plane": 22,
+        "planned_satellites": 1584,
+        "fcc_committed_completion": "2027-03",
+        "status": "operational",
+        "notes": "Primary shell; first to be populated. Planned lowering to 480 km in 2026."
+      },
+      {
+        "shell_id": "gen1-shell2",
+        "group": "Group 2",
+        "altitude_km": 570,
+        "altitude_m": 570000,
+        "inclination_deg": 70.0,
+        "num_planes": 36,
+        "sats_per_plane": 20,
+        "planned_satellites": 720,
+        "status": "operational",
+        "notes": "High-inclination shell for polar/northern coverage."
+      },
+      {
+        "shell_id": "gen1-shell3",
+        "group": "Group 3",
+        "altitude_km": 560,
+        "altitude_m": 560000,
+        "inclination_deg": 97.6,
+        "num_planes": 6,
+        "sats_per_plane": 58,
+        "planned_satellites": 348,
+        "status": "operational",
+        "notes": "Sun-synchronous orbit shell."
+      },
+      {
+        "shell_id": "gen1-shell4",
+        "group": "Group 4",
+        "altitude_km": 540,
+        "altitude_m": 540000,
+        "inclination_deg": 53.2,
+        "num_planes": 72,
+        "sats_per_plane": 22,
+        "planned_satellites": 1584,
+        "status": "operational",
+        "notes": "Second mid-inclination shell, similar to Group 1."
+      },
+      {
+        "shell_id": "gen1-shell5",
+        "group": "Group 4 (SSO extension)",
+        "altitude_km": 560,
+        "altitude_m": 560000,
+        "inclination_deg": 97.6,
+        "num_planes": 4,
+        "sats_per_plane": 43,
+        "planned_satellites": 172,
+        "status": "not yet deployed",
+        "notes": "Additional sun-synchronous shell; not yet populated as of 2025."
+      }
+    ]
+  },
+  "gen2": {
+    "description": "Second-generation Starlink constellation (v2 mini / v2 satellite buses), FCC authorized 2022-12-01",
+    "phase1_satellite_limit": 7500,
+    "total_requested_satellites": 29988,
+    "deployment_vehicle": "Falcon 9 (v2 mini) and Starship (v2 full)",
+    "shells": [
+      {
+        "shell_id": "gen2-shell-A",
+        "groups": [
+          "Group 5",
+          "Group 6",
+          "Group 12",
+          "Group 13"
+        ],
+        "altitude_km": 530,
+        "altitude_m": 530000,
+        "actual_altitude_km": 559,
+        "actual_altitude_m": 559000,
+        "inclination_deg": 43.0,
+        "num_planes": 28,
+        "sats_per_plane": 120,
+        "planned_satellites": 2500,
+        "fcc_half_completion": "2028-12-01",
+        "fcc_full_completion": "2031-12-01",
+        "status": "deploying",
+        "notes": "Lower-inclination shell. Actual operational altitude ~559 km, higher than licensed 530 km."
+      },
+      {
+        "shell_id": "gen2-shell-B",
+        "groups": [
+          "Group 7",
+          "Group 8",
+          "Group 9",
+          "Group 10",
+          "Group 11"
+        ],
+        "altitude_km": 525,
+        "altitude_m": 525000,
+        "actual_altitude_km_range": [
+          480,
+          535
+        ],
+        "inclination_deg": 53.0,
+        "num_planes": 28,
+        "sats_per_plane": 120,
+        "planned_satellites": 2500,
+        "fcc_half_completion": "2028-12-01",
+        "fcc_full_completion": "2031-12-01",
+        "status": "deploying",
+        "notes": "Mid-inclination shell. Groups deploy to varying altitudes (480-535 km). Nominal altitude 525 km."
+      },
+      {
+        "shell_id": "gen2-shell-C",
+        "groups": [
+          "Group 15"
+        ],
+        "altitude_km": 535,
+        "altitude_m": 535000,
+        "inclination_deg": 70.0,
+        "num_planes": null,
+        "sats_per_plane": null,
+        "planned_satellites": 2500,
+        "status": "deploying",
+        "notes": "High-inclination Gen2 shell. Deployment started circa 2025."
+      }
+    ],
+    "additional_requested_shells": [
+      {
+        "description": "340-360 km VLEO shells (requested but not all approved)",
+        "altitude_km_range": [
+          340,
+          360
+        ],
+        "approx_satellites": 20000,
+        "inclination_deg": null,
+        "status": "requested"
+      },
+      {
+        "description": "604-614 km shells (requested)",
+        "altitude_km_range": [
+          604,
+          614
+        ],
+        "approx_satellites": 500,
+        "inclination_deg": null,
+        "status": "requested"
+      }
+    ]
+  },
+  "gen2_groups": {
+    "description": "Per-group deployment details for Gen2 launches (from Wikipedia constellation design table, as of mid-2025)",
+    "groups": [
+      {
+        "group": "Group 5",
+        "shell": "gen2-shell-A",
+        "nominal_altitude_km": 530,
+        "actual_altitude_km": 559,
+        "inclination_deg": 43.0,
+        "num_planes": 28,
+        "sats_per_plane": 120,
+        "planned_satellites": 2500
+      },
+      {
+        "group": "Group 6",
+        "shell": "gen2-shell-A",
+        "nominal_altitude_km": 530,
+        "actual_altitude_km_values": [
+          488,
+          559
+        ],
+        "inclination_deg": 43.0,
+        "planned_satellites": 1779
+      },
+      {
+        "group": "Group 7",
+        "shell": "gen2-shell-B",
+        "nominal_altitude_km": 525,
+        "actual_altitude_km_values": [
+          482,
+          510,
+          549
+        ],
+        "inclination_deg": 53.0,
+        "num_planes": 28,
+        "sats_per_plane": 120,
+        "planned_satellites": 2500
+      },
+      {
+        "group": "Group 8",
+        "shell": "gen2-shell-B",
+        "nominal_altitude_km": 535,
+        "actual_altitude_km": 535,
+        "inclination_deg": 53.0,
+        "num_planes": 28,
+        "sats_per_plane": 120,
+        "planned_satellites": 2500
+      },
+      {
+        "group": "Group 9",
+        "shell": "gen2-shell-B",
+        "nominal_altitude_km": 535,
+        "inclination_deg": 53.0
+      },
+      {
+        "group": "Group 10",
+        "shell": "gen2-shell-B",
+        "nominal_altitude_km": 480,
+        "inclination_deg": 53.0
+      },
+      {
+        "group": "Group 11",
+        "shell": "gen2-shell-B",
+        "nominal_altitude_km": 535,
+        "inclination_deg": 53.0
+      },
+      {
+        "group": "Group 12",
+        "shell": "gen2-shell-A",
+        "nominal_altitude_km": 559,
+        "inclination_deg": 43.0
+      },
+      {
+        "group": "Group 13",
+        "shell": "gen2-shell-A",
+        "nominal_altitude_km": 559,
+        "inclination_deg": 43.0
+      },
+      {
+        "group": "Group 15",
+        "shell": "gen2-shell-C",
+        "nominal_altitude_km": 535,
+        "inclination_deg": 70.0
+      },
+      {
+        "group": "Group 17",
+        "shell": "unknown",
+        "nominal_altitude_km": null,
+        "inclination_deg": null,
+        "notes": "Observed in launch data from late 2025 onwards; shell assignment not yet confirmed in FCC filings."
+      }
+    ]
+  },
+  "physical_constants": {
+    "earth_radius_km": 6371.0,
+    "earth_radius_m": 6371000.0,
+    "earth_mu_m3_s2": 398600441800000.0,
+    "speed_of_light_m_s": 299792458.0
+  },
+  "derived_orbital_parameters": {
+    "description": "Pre-computed orbital parameters for each shell, useful for simulation setup",
+    "shells": [
+      {
+        "shell_id": "gen1-shell1",
+        "altitude_km": 550,
+        "semi_major_axis_km": 6921.0,
+        "orbital_period_minutes": 95.5,
+        "orbital_velocity_km_s": 7.59,
+        "ground_track_velocity_km_s": 6.99
+      },
+      {
+        "shell_id": "gen1-shell2",
+        "altitude_km": 570,
+        "semi_major_axis_km": 6941.0,
+        "orbital_period_minutes": 95.9,
+        "orbital_velocity_km_s": 7.58,
+        "ground_track_velocity_km_s": 6.96
+      },
+      {
+        "shell_id": "gen1-shell3",
+        "altitude_km": 560,
+        "semi_major_axis_km": 6931.0,
+        "orbital_period_minutes": 95.7,
+        "orbital_velocity_km_s": 7.58,
+        "ground_track_velocity_km_s": 6.97
+      },
+      {
+        "shell_id": "gen1-shell4",
+        "altitude_km": 540,
+        "semi_major_axis_km": 6911.0,
+        "orbital_period_minutes": 95.3,
+        "orbital_velocity_km_s": 7.59,
+        "ground_track_velocity_km_s": 7.0
+      },
+      {
+        "shell_id": "gen2-shell-A",
+        "altitude_km": 530,
+        "semi_major_axis_km": 6901.0,
+        "orbital_period_minutes": 95.1,
+        "orbital_velocity_km_s": 7.6,
+        "ground_track_velocity_km_s": 7.02
+      },
+      {
+        "shell_id": "gen2-shell-B",
+        "altitude_km": 525,
+        "semi_major_axis_km": 6896.0,
+        "orbital_period_minutes": 95.0,
+        "orbital_velocity_km_s": 7.6,
+        "ground_track_velocity_km_s": 7.02
+      },
+      {
+        "shell_id": "gen2-shell-C",
+        "altitude_km": 535,
+        "semi_major_axis_km": 6906.0,
+        "orbital_period_minutes": 95.2,
+        "orbital_velocity_km_s": 7.6,
+        "ground_track_velocity_km_s": 7.01
+      }
+    ]
+  },
+  "satellite_hardware": {
+    "versions": [
+      {
+        "version": "v0.9",
+        "generation": "gen1",
+        "mass_kg": 227,
+        "status": "test (all deorbited)",
+        "first_launch": "2019-05",
+        "propulsion": "Hall-effect thruster (krypton)",
+        "inter_satellite_links": false
+      },
+      {
+        "version": "v1.0",
+        "generation": "gen1",
+        "mass_kg": 260,
+        "status": "operational (aging)",
+        "first_launch": "2019-11",
+        "propulsion": "Hall-effect thruster (krypton)",
+        "inter_satellite_links": false,
+        "bands": [
+          "Ku",
+          "Ka"
+        ]
+      },
+      {
+        "version": "v1.5",
+        "generation": "gen1",
+        "mass_kg": 295,
+        "status": "operational",
+        "first_launch": "2021-01",
+        "propulsion": "Hall-effect thruster (krypton)",
+        "inter_satellite_links": true,
+        "isl_type": "optical (laser)",
+        "bands": [
+          "Ku",
+          "Ka"
+        ],
+        "solar_array_area_m2": 22.68,
+        "bus_length_m": 2.8,
+        "bus_width_m": 1.3
+      },
+      {
+        "version": "v2 mini (F9-2)",
+        "generation": "gen2",
+        "mass_kg": 800,
+        "status": "operational",
+        "first_launch": "2023-02",
+        "launch_vehicle": "Falcon 9",
+        "propulsion": "Hall-effect thruster (argon)",
+        "inter_satellite_links": true,
+        "isl_type": "optical (laser)",
+        "bands": [
+          "Ku",
+          "Ka"
+        ],
+        "solar_array_area_m2": 104.96,
+        "bus_length_m": 4.1,
+        "bus_width_m": 2.7,
+        "num_solar_arrays": 2
+      },
+      {
+        "version": "v2 mini DtC (F9-3)",
+        "generation": "gen2",
+        "mass_kg": 970,
+        "status": "operational",
+        "first_launch": "2024-01",
+        "launch_vehicle": "Falcon 9",
+        "propulsion": "Hall-effect thruster (argon)",
+        "inter_satellite_links": true,
+        "isl_type": "optical (laser)",
+        "bands": [
+          "Ku",
+          "Ka"
+        ],
+        "direct_to_cell": true,
+        "solar_array_area_m2": 105,
+        "bus_length_m": 7.4,
+        "bus_width_m": 2.7,
+        "num_solar_arrays": 2,
+        "notes": "Includes direct-to-cellular (DtC) capability with T-Mobile partnership."
+      },
+      {
+        "version": "v2 (Starship-1)",
+        "generation": "gen2",
+        "mass_kg": 2000,
+        "status": "planned",
+        "launch_vehicle": "Starship",
+        "propulsion": "Hall-effect thruster (argon)",
+        "inter_satellite_links": true,
+        "isl_type": "optical (laser)",
+        "solar_array_area_m2": 256.94,
+        "bus_length_m": 6.4,
+        "bus_width_m": 2.7,
+        "num_solar_arrays": 2
+      },
+      {
+        "version": "v2 DtC (Starship-2)",
+        "generation": "gen2",
+        "mass_kg": 2000,
+        "status": "planned",
+        "launch_vehicle": "Starship",
+        "propulsion": "Hall-effect thruster (argon)",
+        "inter_satellite_links": true,
+        "isl_type": "optical (laser)",
+        "direct_to_cell": true,
+        "solar_array_area_m2": 256.94,
+        "bus_length_m": 10.1,
+        "bus_width_m": 2.7,
+        "num_solar_arrays": 2
+      }
+    ]
+  },
+  "isl_parameters": {
+    "description": "Inter-satellite link parameters (laser optical links), estimated from public data",
+    "link_speed_gbps": 25,
+    "max_range_km": 4000,
+    "notes": [
+      "ISL speed of 25 Gbps at up to 4000 km range announced by SpaceX in 2025 for mini laser terminal.",
+      "Intra-plane ISLs connect to the satellite ahead and behind in the same orbital plane.",
+      "Inter-plane ISLs connect to satellites in adjacent orbital planes.",
+      "Typical configuration: 4 ISL terminals per satellite (2 intra-plane + 2 inter-plane).",
+      "ISL links may be dropped near polar regions where orbital planes converge rapidly."
+    ]
+  }
+}
