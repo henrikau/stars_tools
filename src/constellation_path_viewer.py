@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: MPL-2.0
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 """Visualize a dynamic satellite path between two ground locations.
 
 Usage:
@@ -15,11 +21,12 @@ import csv
 import heapq
 import json
 import math
+import os
 import pathlib
 import re
 import time
 import tkinter as tk
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from tkinter import ttk
 
 
@@ -30,7 +37,7 @@ SECONDS_PER_HOUR = 3600.0
 LIGHT_SPEED_KM_S = 299792.458
 MIN_ELEVATION_DEG = 10.0
 DEFAULT_ISL_RANGE_KM = 2600.0
-DEFAULT_INTER_PROCESSING_DELAY_US = 50.0
+DEFAULT_INTER_PROCESSING_DELAY_US = 500.0
 EARTH_TEXTURE_STEP_DEG = 6
 GROUND_LINK_ELEVATION_PREFERENCE = 0.65
 LOG_INTERVAL_SECONDS = 15.0
@@ -126,13 +133,159 @@ class GroundPoint:
 
 
 @dataclass(frozen=True)
+class PathViewerSettings:
+    city_db_path: pathlib.Path = field(default_factory=lambda: CITY_DB_PATH)
+    log_dir: pathlib.Path = field(default_factory=lambda: LOG_DIR)
+    earth_texture_path: pathlib.Path | None = field(default_factory=lambda: EARTH_TEXTURE_PATH)
+    conservative_switch_threshold: float = 0.0
+    min_elevation_deg: float = MIN_ELEVATION_DEG
+    default_isl_range_km: float = DEFAULT_ISL_RANGE_KM
+    default_inter_processing_delay_us: float = DEFAULT_INTER_PROCESSING_DELAY_US
+    earth_texture_step_deg: int = EARTH_TEXTURE_STEP_DEG
+    ground_link_elevation_preference: float = GROUND_LINK_ELEVATION_PREFERENCE
+    log_interval_seconds: float = LOG_INTERVAL_SECONDS
+    initial_time_scale: float = 1.0 / 60.0
+    autoplay: bool = True
+    initial_yaw_deg: float = -25.0
+    initial_pitch_deg: float = 18.0
+    initial_zoom: float = 1.0
+    show_earth: bool = True
+    window_title: str = "STARS Constellation Path Viewer"
+    window_geometry: str = "1460x900"
+    min_window_width: int = 1180
+    min_window_height: int = 760
+    step_seconds_small: float = 300.0
+    step_seconds_large: float = 1800.0
+    zoom_min: float = 0.5
+    zoom_max: float = 3.5
+    zoom_factor: float = 1.1
+    drag_sensitivity: float = 0.008
+    pitch_limit_deg: float = 89.0
+    satellite_radius_active: float = 4.2
+    satellite_radius_inactive: float = 1.5
+    route_line_width: int = 3
+    earth_grid_line_width: int = 1
+    earth_grid_hidden_line_threshold: float = 0.05
+    earth_texture_hidden_line_threshold: float = 0.08
+    earth_texture_visible_vertex_threshold: float = 0.12
+    continent_visible_vertex_threshold: float = 0.15
+    camera_distance_multiplier: float = 3.2
+    scale_fill_ratio: float = 0.9
+    scale_divisor: float = 4.5
+
+    @classmethod
+    def from_payload(cls, payload: dict, config_path: pathlib.Path) -> PathViewerSettings:
+        return cls(
+            city_db_path=resolve_optional_path(payload.get("city_db"), config_path.parent, CITY_DB_PATH),
+            log_dir=resolve_optional_path(payload.get("log_dir"), config_path.parent, LOG_DIR, must_exist=False),
+            earth_texture_path=resolve_optional_path(
+                payload.get("earth_texture_path"),
+                config_path.parent,
+                EARTH_TEXTURE_PATH,
+                allow_none=True,
+            ),
+            conservative_switch_threshold=require_non_negative_float(
+                payload, "conservative_switch_threshold", 0.0
+            ),
+            min_elevation_deg=require_non_negative_float(payload, "min_elevation_deg", MIN_ELEVATION_DEG),
+            default_isl_range_km=require_positive_float(payload, "default_isl_range_km", DEFAULT_ISL_RANGE_KM),
+            default_inter_processing_delay_us=require_non_negative_float(
+                payload, "default_inter_processing_delay_us", DEFAULT_INTER_PROCESSING_DELAY_US
+            ),
+            earth_texture_step_deg=require_positive_int(payload, "earth_texture_step_deg", EARTH_TEXTURE_STEP_DEG),
+            ground_link_elevation_preference=require_non_negative_float(
+                payload, "ground_link_elevation_preference", GROUND_LINK_ELEVATION_PREFERENCE
+            ),
+            log_interval_seconds=require_positive_float(payload, "log_interval_seconds", LOG_INTERVAL_SECONDS),
+            initial_time_scale=require_non_negative_float(payload, "initial_time_scale", 1.0 / 60.0),
+            autoplay=require_bool(payload, "autoplay", True),
+            initial_yaw_deg=require_float(payload, "initial_yaw_deg", -25.0),
+            initial_pitch_deg=require_float(payload, "initial_pitch_deg", 18.0),
+            initial_zoom=require_positive_float(payload, "initial_zoom", 1.0),
+            show_earth=require_bool(payload, "show_earth", True),
+            window_title=require_string(payload, "window_title", "STARS Constellation Path Viewer"),
+            window_geometry=require_string(payload, "window_geometry", "1460x900"),
+            min_window_width=require_positive_int(payload, "min_window_width", 1180),
+            min_window_height=require_positive_int(payload, "min_window_height", 760),
+            step_seconds_small=require_non_negative_float(payload, "step_seconds_small", 300.0),
+            step_seconds_large=require_non_negative_float(payload, "step_seconds_large", 1800.0),
+            zoom_min=require_positive_float(payload, "zoom_min", 0.5),
+            zoom_max=require_positive_float(payload, "zoom_max", 3.5),
+            zoom_factor=require_positive_float(payload, "zoom_factor", 1.1),
+            drag_sensitivity=require_positive_float(payload, "drag_sensitivity", 0.008),
+            pitch_limit_deg=require_positive_float(payload, "pitch_limit_deg", 89.0),
+            satellite_radius_active=require_positive_float(payload, "satellite_radius_active", 4.2),
+            satellite_radius_inactive=require_positive_float(payload, "satellite_radius_inactive", 1.5),
+            route_line_width=require_positive_int(payload, "route_line_width", 3),
+            earth_grid_line_width=require_positive_int(payload, "earth_grid_line_width", 1),
+            earth_grid_hidden_line_threshold=require_non_negative_float(
+                payload, "earth_grid_hidden_line_threshold", 0.05
+            ),
+            earth_texture_hidden_line_threshold=require_non_negative_float(
+                payload, "earth_texture_hidden_line_threshold", 0.08
+            ),
+            earth_texture_visible_vertex_threshold=require_non_negative_float(
+                payload, "earth_texture_visible_vertex_threshold", 0.12
+            ),
+            continent_visible_vertex_threshold=require_non_negative_float(
+                payload, "continent_visible_vertex_threshold", 0.15
+            ),
+            camera_distance_multiplier=require_positive_float(payload, "camera_distance_multiplier", 3.2),
+            scale_fill_ratio=require_positive_float(payload, "scale_fill_ratio", 0.9),
+            scale_divisor=require_positive_float(payload, "scale_divisor", 4.5),
+        )
+
+    def to_json_dict(self) -> dict[str, object]:
+        return {
+            "city_db_path": str(self.city_db_path),
+            "log_dir": str(self.log_dir),
+            "earth_texture_path": str(self.earth_texture_path) if self.earth_texture_path else None,
+            "conservative_switch_threshold": self.conservative_switch_threshold,
+            "min_elevation_deg": self.min_elevation_deg,
+            "default_isl_range_km": self.default_isl_range_km,
+            "default_inter_processing_delay_us": self.default_inter_processing_delay_us,
+            "earth_texture_step_deg": self.earth_texture_step_deg,
+            "ground_link_elevation_preference": self.ground_link_elevation_preference,
+            "log_interval_seconds": self.log_interval_seconds,
+            "initial_time_scale": self.initial_time_scale,
+            "autoplay": self.autoplay,
+            "initial_yaw_deg": self.initial_yaw_deg,
+            "initial_pitch_deg": self.initial_pitch_deg,
+            "initial_zoom": self.initial_zoom,
+            "show_earth": self.show_earth,
+            "window_title": self.window_title,
+            "window_geometry": self.window_geometry,
+            "min_window_width": self.min_window_width,
+            "min_window_height": self.min_window_height,
+            "step_seconds_small": self.step_seconds_small,
+            "step_seconds_large": self.step_seconds_large,
+            "zoom_min": self.zoom_min,
+            "zoom_max": self.zoom_max,
+            "zoom_factor": self.zoom_factor,
+            "drag_sensitivity": self.drag_sensitivity,
+            "pitch_limit_deg": self.pitch_limit_deg,
+            "satellite_radius_active": self.satellite_radius_active,
+            "satellite_radius_inactive": self.satellite_radius_inactive,
+            "route_line_width": self.route_line_width,
+            "earth_grid_line_width": self.earth_grid_line_width,
+            "earth_grid_hidden_line_threshold": self.earth_grid_hidden_line_threshold,
+            "earth_texture_hidden_line_threshold": self.earth_texture_hidden_line_threshold,
+            "earth_texture_visible_vertex_threshold": self.earth_texture_visible_vertex_threshold,
+            "continent_visible_vertex_threshold": self.continent_visible_vertex_threshold,
+            "camera_distance_multiplier": self.camera_distance_multiplier,
+            "scale_fill_ratio": self.scale_fill_ratio,
+            "scale_divisor": self.scale_divisor,
+        }
+
+
+@dataclass(frozen=True)
 class ViewerConfig:
     place_a: str
     place_b: str
     constellation_a: pathlib.Path
     constellation_b: pathlib.Path
+    settings: PathViewerSettings
     constellation_ixp: pathlib.Path | None = None
-    conservative_switch_threshold: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -186,6 +339,160 @@ def clamp(value: float, minimum: float, maximum: float) -> float:
     return max(minimum, min(maximum, value))
 
 
+def require_string(payload: dict, key: str, default: str) -> str:
+    value = payload.get(key, default)
+    if not isinstance(value, str) or not value.strip():
+        raise SystemExit(f"Config field '{key}' must be a non-empty string.")
+    return value.strip()
+
+
+def require_bool(payload: dict, key: str, default: bool) -> bool:
+    value = payload.get(key, default)
+    if not isinstance(value, bool):
+        raise SystemExit(f"Config field '{key}' must be a boolean.")
+    return value
+
+
+def require_float(payload: dict, key: str, default: float) -> float:
+    value = payload.get(key, default)
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        raise SystemExit(f"Config field '{key}' must be a number.")
+
+
+def require_non_negative_float(payload: dict, key: str, default: float) -> float:
+    value = require_float(payload, key, default)
+    if value < 0.0:
+        raise SystemExit(f"Config field '{key}' must be non-negative.")
+    return value
+
+
+def require_positive_float(payload: dict, key: str, default: float) -> float:
+    value = require_float(payload, key, default)
+    if value <= 0.0:
+        raise SystemExit(f"Config field '{key}' must be positive.")
+    return value
+
+
+def require_positive_int(payload: dict, key: str, default: int) -> int:
+    value = payload.get(key, default)
+    if not isinstance(value, int) or value <= 0:
+        raise SystemExit(f"Config field '{key}' must be a positive integer.")
+    return value
+
+
+def resolve_optional_path(
+    raw_value: object,
+    base_dir: pathlib.Path,
+    default: pathlib.Path | None,
+    *,
+    must_exist: bool = True,
+    allow_none: bool = False,
+) -> pathlib.Path | None:
+    if raw_value is None:
+        resolved = default
+    elif isinstance(raw_value, str):
+        stripped = raw_value.strip()
+        if not stripped:
+            resolved = None if allow_none else default
+        else:
+            resolved = (base_dir / stripped).resolve()
+    else:
+        raise SystemExit("Config path fields must be strings when provided.")
+
+    if resolved is None:
+        return None
+    if must_exist and not resolved.exists():
+        raise SystemExit(f"Configured path does not exist: {resolved}")
+    return resolved
+
+
+def format_config_path(target: pathlib.Path, config_dir: pathlib.Path) -> str:
+    if os.path.commonpath([str(target), str(PROJECT_ROOT)]) != str(PROJECT_ROOT):
+        return str(target)
+    if os.path.commonpath([str(config_dir), str(PROJECT_ROOT)]) != str(PROJECT_ROOT):
+        return str(target)
+    return os.path.relpath(target, start=config_dir)
+
+
+def build_default_config_payload(output_path: pathlib.Path) -> dict[str, object]:
+    config_dir = output_path.parent.resolve()
+    settings = PathViewerSettings()
+    return {
+        "_documentation": {
+            "required_fields": {
+                "place_a": "First endpoint. Use 'City, Country' or 'lat,lon'.",
+                "place_b": "Second endpoint. Use 'City, Country' or 'lat,lon'.",
+                "constellation_a": "Primary constellation JSON, resolved relative to this config file.",
+                "constellation_b": "Secondary constellation JSON, resolved relative to this config file.",
+            },
+            "optional_fields": {
+                "constellation_ixp": "Optional relay/IXP constellation JSON.",
+                "city_db": "Override city database CSV path.",
+                "log_dir": "Override output directory for generated CSV logs.",
+                "earth_texture_path": "Override Earth texture PNG path. Use empty string to disable.",
+            },
+            "settings_note": "All settings below are optional at runtime, but this template writes them explicitly with current defaults.",
+        },
+        "place_a": "Trondheim, Norway",
+        "place_b": "Te Aroha, New Zealand",
+        "constellation_a": format_config_path(PROJECT_ROOT / "data" / "telesat-lightspeed-constellation-shells.json", config_dir),
+        "constellation_b": format_config_path(PROJECT_ROOT / "data" / "telesat-lightspeed-constellation-shells.json", config_dir),
+        "constellation_ixp": None,
+        "city_db": format_config_path(settings.city_db_path, config_dir),
+        "log_dir": format_config_path(settings.log_dir, config_dir),
+        "earth_texture_path": (
+            format_config_path(settings.earth_texture_path, config_dir)
+            if settings.earth_texture_path is not None
+            else ""
+        ),
+        "conservative_switch_threshold": settings.conservative_switch_threshold,
+        "min_elevation_deg": settings.min_elevation_deg,
+        "default_isl_range_km": settings.default_isl_range_km,
+        "default_inter_processing_delay_us": settings.default_inter_processing_delay_us,
+        "earth_texture_step_deg": settings.earth_texture_step_deg,
+        "ground_link_elevation_preference": settings.ground_link_elevation_preference,
+        "log_interval_seconds": settings.log_interval_seconds,
+        "initial_time_scale": settings.initial_time_scale,
+        "autoplay": settings.autoplay,
+        "initial_yaw_deg": settings.initial_yaw_deg,
+        "initial_pitch_deg": settings.initial_pitch_deg,
+        "initial_zoom": settings.initial_zoom,
+        "show_earth": settings.show_earth,
+        "window_title": settings.window_title,
+        "window_geometry": settings.window_geometry,
+        "min_window_width": settings.min_window_width,
+        "min_window_height": settings.min_window_height,
+        "step_seconds_small": settings.step_seconds_small,
+        "step_seconds_large": settings.step_seconds_large,
+        "zoom_min": settings.zoom_min,
+        "zoom_max": settings.zoom_max,
+        "zoom_factor": settings.zoom_factor,
+        "drag_sensitivity": settings.drag_sensitivity,
+        "pitch_limit_deg": settings.pitch_limit_deg,
+        "satellite_radius_active": settings.satellite_radius_active,
+        "satellite_radius_inactive": settings.satellite_radius_inactive,
+        "route_line_width": settings.route_line_width,
+        "earth_grid_line_width": settings.earth_grid_line_width,
+        "earth_grid_hidden_line_threshold": settings.earth_grid_hidden_line_threshold,
+        "earth_texture_hidden_line_threshold": settings.earth_texture_hidden_line_threshold,
+        "earth_texture_visible_vertex_threshold": settings.earth_texture_visible_vertex_threshold,
+        "continent_visible_vertex_threshold": settings.continent_visible_vertex_threshold,
+        "camera_distance_multiplier": settings.camera_distance_multiplier,
+        "scale_fill_ratio": settings.scale_fill_ratio,
+        "scale_divisor": settings.scale_divisor,
+    }
+
+
+def write_default_config(output_path: pathlib.Path) -> None:
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    payload = build_default_config_payload(output_path.resolve())
+    with output_path.open("w", encoding="utf-8") as handle:
+        json.dump(payload, handle, indent=2)
+        handle.write("\n")
+
+
 def choose_altitude_km(shell: dict) -> float | None:
     if isinstance(shell.get("actual_altitude_km"), (int, float)):
         return float(shell["actual_altitude_km"])
@@ -228,7 +535,7 @@ def shell_label(shell: dict) -> str:
     return "unnamed-shell"
 
 
-def load_shells(json_path: pathlib.Path) -> tuple[list[ShellDefinition], float]:
+def load_shells(json_path: pathlib.Path, default_isl_range_km: float) -> tuple[list[ShellDefinition], float]:
     with json_path.open("r", encoding="utf-8") as handle:
         payload = json.load(handle)
 
@@ -238,7 +545,7 @@ def load_shells(json_path: pathlib.Path) -> tuple[list[ShellDefinition], float]:
         dataset_label = str(metadata.get("constellation_name") or metadata.get("description") or dataset_label)
 
     shells: list[ShellDefinition] = []
-    isl_range_km = DEFAULT_ISL_RANGE_KM
+    isl_range_km = default_isl_range_km
 
     hardware = payload.get("satellite_hardware")
     if isinstance(hardware, dict) and isinstance(hardware.get("isl_max_range_km"), (int, float)):
@@ -390,7 +697,11 @@ def load_city_db(csv_path: pathlib.Path) -> dict[str, list[CityEntry]]:
     return city_db
 
 
-def resolve_place(name: str, city_db: dict[str, list[CityEntry]]) -> GroundPoint:
+def resolve_place(
+    name: str,
+    city_db: dict[str, list[CityEntry]],
+    city_db_path: pathlib.Path = CITY_DB_PATH,
+) -> GroundPoint:
     stripped = name.strip()
     coordinate_match = re.fullmatch(r"\s*([+-]?\d+(?:\.\d+)?)\s*,\s*([+-]?\d+(?:\.\d+)?)\s*", stripped)
     if coordinate_match:
@@ -421,7 +732,7 @@ def resolve_place(name: str, city_db: dict[str, list[CityEntry]]) -> GroundPoint
         if len(matches) > 1:
             raise SystemExit(f"Ambiguous place '{name}'. Specify 'City, Country'.")
     raise SystemExit(
-        f"Unknown place '{name}'. Use a city from {CITY_DB_PATH} or pass coordinates as 'lat,lon'."
+        f"Unknown place '{name}'. Use a city from {city_db_path} or pass coordinates as 'lat,lon'."
     )
 
 
@@ -437,6 +748,8 @@ def load_config(config_path: pathlib.Path) -> ViewerConfig:
     if missing:
         raise SystemExit(f"Config file is missing required string field(s): {', '.join(missing)}")
 
+    settings = PathViewerSettings.from_payload(payload, config_path)
+
     constellation_a = (config_path.parent / payload["constellation_a"]).resolve()
     constellation_b = (config_path.parent / payload["constellation_b"]).resolve()
     if not constellation_a.exists():
@@ -449,23 +762,13 @@ def load_config(config_path: pathlib.Path) -> ViewerConfig:
         constellation_ixp = (config_path.parent / raw_ixp).resolve()
         if not constellation_ixp.exists():
             raise SystemExit(f"IXP constellation file not found from config: {constellation_ixp}")
-    conservative_switch_threshold = 0.0
-    raw_threshold = payload.get("conservative_switch_threshold")
-    if raw_threshold is not None:
-        try:
-            conservative_switch_threshold = float(raw_threshold)
-        except (TypeError, ValueError):
-            raise SystemExit("Config field 'conservative_switch_threshold' must be a non-negative number.")
-        if conservative_switch_threshold < 0.0:
-            raise SystemExit("Config field 'conservative_switch_threshold' must be non-negative.")
-
     return ViewerConfig(
         place_a=payload["place_a"].strip(),
         place_b=payload["place_b"].strip(),
         constellation_a=constellation_a,
         constellation_b=constellation_b,
         constellation_ixp=constellation_ixp,
-        conservative_switch_threshold=conservative_switch_threshold,
+        settings=settings,
     )
 
 
@@ -536,7 +839,7 @@ def load_constellations(config: ViewerConfig) -> list[LoadedConstellation]:
     for role, path in entries:
         if path is None:
             continue
-        shells, isl_range_km = load_shells(path)
+        shells, isl_range_km = load_shells(path, config.settings.default_isl_range_km)
         loaded.append(LoadedConstellation(role=role, path=path, shells=shells, isl_range_km=isl_range_km))
     return loaded
 
@@ -616,13 +919,13 @@ class ConstellationPathViewer:
         ground_b: GroundPoint,
         constellations: list[LoadedConstellation],
         same_constellation_mode: bool,
-        conservative_switch_threshold: float,
-        log_dir: pathlib.Path,
+        settings: PathViewerSettings,
         run_label: str,
     ) -> None:
         self.root = root
         self.ground_a = ground_a
         self.ground_b = ground_b
+        self.settings = settings
         self.constellations = {constellation.role: constellation for constellation in constellations}
         self.satellites_by_role: dict[str, list[Satellite]] = {}
         self.satellites_by_node_id: dict[str, Satellite] = {}
@@ -630,7 +933,7 @@ class ConstellationPathViewer:
         self.neighbor_map: dict[str, list[str]] = {}
         self.constellation_ranges_km = {constellation.role: constellation.isl_range_km for constellation in constellations}
         self.same_constellation_mode = same_constellation_mode
-        self.conservative_switch_threshold = conservative_switch_threshold
+        self.conservative_switch_threshold = settings.conservative_switch_threshold
         self.active_path: list[str] = []
 
         for constellation in constellations:
@@ -669,32 +972,33 @@ class ConstellationPathViewer:
         self.satellites = [sat for role in ("a", "b", "ixp") for sat in self.satellites_by_role.get(role, [])]
 
         self.time_seconds = 0.0
-        self.time_scale = 1.0 / 60.0
+        self.time_scale = settings.initial_time_scale
         self.last_tick = None
-        self.is_playing = True
-        self.yaw = math.radians(-25.0)
-        self.pitch = math.radians(18.0)
-        self.zoom = 1.0
+        self.is_playing = settings.autoplay
+        self.yaw = math.radians(settings.initial_yaw_deg)
+        self.pitch = math.radians(settings.initial_pitch_deg)
+        self.zoom = settings.initial_zoom
         self.drag_start: tuple[int, int] | None = None
         self.earth_texture: tk.PhotoImage | None = None
         self.earth_texture_tiles: list[tuple[float, float, float, float, str]] = []
         self.last_route_signature: tuple[str, ...] | None = None
         self.last_path_change_time_seconds = 0.0
         self.last_logged_interval_index = -1
-        self.log_path = self._create_log_file(log_dir, run_label)
+        self.log_path = self._create_log_file(settings.log_dir, run_label)
 
         self.route_status_var = tk.StringVar(value="")
         self.summary_var = tk.StringVar(value="")
         self.time_scale_var = tk.DoubleVar(value=self.time_scale)
-        self.processing_delay_var = tk.StringVar(value=f"{DEFAULT_INTER_PROCESSING_DELAY_US:g}")
-        self.show_earth_var = tk.BooleanVar(value=True)
+        self.processing_delay_var = tk.StringVar(value=f"{settings.default_inter_processing_delay_us:g}")
+        self.show_earth_var = tk.BooleanVar(value=settings.show_earth)
 
-        self.root.title("STARS Constellation Path Viewer")
-        self.root.geometry("1460x900")
-        self.root.minsize(1180, 760)
+        self.root.title(settings.window_title)
+        self.root.geometry(settings.window_geometry)
+        self.root.minsize(settings.min_window_width, settings.min_window_height)
 
         self._load_earth_texture()
         self._build_ui()
+        self.play_button.configure(text="Pause" if self.is_playing else "Play")
         self._schedule_tick()
 
     def _create_log_file(self, log_dir: pathlib.Path, run_label: str) -> pathlib.Path:
@@ -726,7 +1030,7 @@ class ConstellationPathViewer:
             self.last_path_change_time_seconds = self.time_seconds
 
     def _append_log_row(self, route_state: dict) -> None:
-        current_interval_index = int(self.time_seconds // LOG_INTERVAL_SECONDS)
+        current_interval_index = int(self.time_seconds // self.settings.log_interval_seconds)
         if current_interval_index <= self.last_logged_interval_index:
             return
         delay_ms = route_state["total_delay_ms"] if route_state["path"] else -1.0
@@ -735,7 +1039,7 @@ class ConstellationPathViewer:
         with self.log_path.open("a", encoding="utf-8", newline="") as handle:
             writer = csv.writer(handle)
             for interval_index in range(self.last_logged_interval_index + 1, current_interval_index + 1):
-                simulation_time_seconds = interval_index * LOG_INTERVAL_SECONDS
+                simulation_time_seconds = interval_index * self.settings.log_interval_seconds
                 writer.writerow(
                     [
                         f"{simulation_time_seconds:.6f}",
@@ -749,10 +1053,11 @@ class ConstellationPathViewer:
         self.last_logged_interval_index = current_interval_index
 
     def _load_earth_texture(self) -> None:
-        if EARTH_TEXTURE_PATH is None or not EARTH_TEXTURE_PATH.exists():
+        earth_texture_path = self.settings.earth_texture_path
+        if earth_texture_path is None or not earth_texture_path.exists():
             return
         try:
-            self.earth_texture = tk.PhotoImage(file=str(EARTH_TEXTURE_PATH))
+            self.earth_texture = tk.PhotoImage(file=str(earth_texture_path))
         except tk.TclError:
             self.earth_texture = None
             return
@@ -760,11 +1065,11 @@ class ConstellationPathViewer:
         width = self.earth_texture.width()
         height = self.earth_texture.height()
         tiles: list[tuple[float, float, float, float, str]] = []
-        for lat0 in range(-90, 90, EARTH_TEXTURE_STEP_DEG):
-            lat1 = min(90, lat0 + EARTH_TEXTURE_STEP_DEG)
+        for lat0 in range(-90, 90, self.settings.earth_texture_step_deg):
+            lat1 = min(90, lat0 + self.settings.earth_texture_step_deg)
             lat_center = (lat0 + lat1) / 2.0
-            for lon0 in range(-180, 180, EARTH_TEXTURE_STEP_DEG):
-                lon1 = lon0 + EARTH_TEXTURE_STEP_DEG
+            for lon0 in range(-180, 180, self.settings.earth_texture_step_deg):
+                lon1 = lon0 + self.settings.earth_texture_step_deg
                 lon_center = (lon0 + lon1) / 2.0
                 x = int(((lon_center + 180.0) / 360.0) * (width - 1))
                 y = int(((90.0 - lat_center) / 180.0) * (height - 1))
@@ -825,8 +1130,16 @@ class ConstellationPathViewer:
         playback_row.pack(fill=tk.X)
         self.play_button = ttk.Button(playback_row, text="Pause", command=self._toggle_play)
         self.play_button.pack(side=tk.LEFT)
-        ttk.Button(playback_row, text="Step +5 min", command=lambda: self._step_time(300.0)).pack(side=tk.LEFT, padx=(8, 0))
-        ttk.Button(playback_row, text="Step +30 min", command=lambda: self._step_time(1800.0)).pack(side=tk.LEFT, padx=(8, 0))
+        ttk.Button(
+            playback_row,
+            text="Step +5 min",
+            command=lambda: self._step_time(self.settings.step_seconds_small),
+        ).pack(side=tk.LEFT, padx=(8, 0))
+        ttk.Button(
+            playback_row,
+            text="Step +30 min",
+            command=lambda: self._step_time(self.settings.step_seconds_large),
+        ).pack(side=tk.LEFT, padx=(8, 0))
         ttk.Button(playback_row, text="Reset View", command=self._reset_view).pack(side=tk.RIGHT)
 
         ttk.Label(controls, text="ISL Processing Delay (us)", style="Viewer.TLabel").pack(anchor="w", pady=(12, 0))
@@ -900,9 +1213,9 @@ class ConstellationPathViewer:
         self._redraw()
 
     def _reset_view(self) -> None:
-        self.yaw = math.radians(-25.0)
-        self.pitch = math.radians(18.0)
-        self.zoom = 1.0
+        self.yaw = math.radians(self.settings.initial_yaw_deg)
+        self.pitch = math.radians(self.settings.initial_pitch_deg)
+        self.zoom = self.settings.initial_zoom
         self._redraw()
 
     def _start_drag(self, event: tk.Event) -> None:
@@ -915,16 +1228,17 @@ class ConstellationPathViewer:
         dx = event.x - self.drag_start[0]
         dy = event.y - self.drag_start[1]
         self.drag_start = (event.x, event.y)
-        self.yaw += dx * 0.008
-        self.pitch = clamp(self.pitch - dy * 0.008, math.radians(-89.0), math.radians(89.0))
+        self.yaw += dx * self.settings.drag_sensitivity
+        pitch_limit = math.radians(self.settings.pitch_limit_deg)
+        self.pitch = clamp(self.pitch - dy * self.settings.drag_sensitivity, -pitch_limit, pitch_limit)
         self._redraw()
 
     def _zoom_view(self, event: tk.Event, delta_override: int | None = None) -> None:
         delta = delta_override if delta_override is not None else event.delta
         if delta == 0:
             return
-        factor = 1.1 if delta > 0 else 1.0 / 1.1
-        self.zoom = clamp(self.zoom * factor, 0.5, 3.5)
+        factor = self.settings.zoom_factor if delta > 0 else 1.0 / self.settings.zoom_factor
+        self.zoom = clamp(self.zoom * factor, self.settings.zoom_min, self.settings.zoom_max)
         self._redraw()
 
     def _earth_grid_segments(self) -> list[tuple[tuple[float, float, float], tuple[float, float, float]]]:
@@ -987,7 +1301,7 @@ class ConstellationPathViewer:
             render_tiles: list[tuple[float, list[float], str]] = []
             for lat0, lat1, lon0, lon1, fill in self.earth_texture_tiles:
                 center_rotated = rotate_point(*geodetic_to_ecef((lat0 + lat1) / 2.0, (lon0 + lon1) / 2.0), yaw=self.yaw, pitch=self.pitch)
-                if center_rotated[2] < -EARTH_RADIUS_KM * 0.08:
+                if center_rotated[2] < -EARTH_RADIUS_KM * self.settings.earth_texture_hidden_line_threshold:
                     continue
                 corners = [
                     geodetic_to_ecef(lat0, lon0),
@@ -999,7 +1313,7 @@ class ConstellationPathViewer:
                 visible_vertices = 0
                 for corner in corners:
                     rotated = rotate_point(*corner, yaw=self.yaw, pitch=self.pitch)
-                    if rotated[2] >= -EARTH_RADIUS_KM * 0.12:
+                    if rotated[2] >= -EARTH_RADIUS_KM * self.settings.earth_texture_visible_vertex_threshold:
                         visible_vertices += 1
                     projected = project_point(*rotated, width, height, camera_distance, scale)
                     if projected is None:
@@ -1019,7 +1333,7 @@ class ConstellationPathViewer:
                 for lat_deg, lon_deg in polygon:
                     point = geodetic_to_ecef(lat_deg, lon_deg)
                     rotated = rotate_point(*point, yaw=self.yaw, pitch=self.pitch)
-                    if rotated[2] >= -EARTH_RADIUS_KM * 0.15:
+                    if rotated[2] >= -EARTH_RADIUS_KM * self.settings.continent_visible_vertex_threshold:
                         visible_count += 1
                     projected = project_point(*rotated, width, height, camera_distance, scale)
                     if projected is not None:
@@ -1036,30 +1350,32 @@ class ConstellationPathViewer:
         for start, end in self._earth_grid_segments():
             rotated_start = rotate_point(*start, yaw=self.yaw, pitch=self.pitch)
             rotated_end = rotate_point(*end, yaw=self.yaw, pitch=self.pitch)
-            if rotated_start[2] < -EARTH_RADIUS_KM * 0.05 and rotated_end[2] < -EARTH_RADIUS_KM * 0.05:
+            if (
+                rotated_start[2] < -EARTH_RADIUS_KM * self.settings.earth_grid_hidden_line_threshold
+                and rotated_end[2] < -EARTH_RADIUS_KM * self.settings.earth_grid_hidden_line_threshold
+            ):
                 continue
             p0 = project_point(*rotated_start, width, height, camera_distance, scale)
             p1 = project_point(*rotated_end, width, height, camera_distance, scale)
             if p0 is None or p1 is None:
                 continue
-            self.canvas.create_line(p0[0], p0[1], p1[0], p1[1], fill="#2d5873", width=1)
+            self.canvas.create_line(p0[0], p0[1], p1[0], p1[1], fill="#2d5873", width=self.settings.earth_grid_line_width)
 
     def _processing_delay_seconds(self) -> tuple[float, str]:
         raw_value = self.processing_delay_var.get().strip()
         try:
             value_us = float(raw_value)
         except ValueError:
-            value_us = DEFAULT_INTER_PROCESSING_DELAY_US
-            self.processing_delay_var.set(f"{DEFAULT_INTER_PROCESSING_DELAY_US:g}")
+            value_us = self.settings.default_inter_processing_delay_us
+            self.processing_delay_var.set(f"{self.settings.default_inter_processing_delay_us:g}")
         value_us = max(0.0, value_us)
         return value_us / 1_000_000.0, f"{value_us:g}"
 
-    @staticmethod
-    def _ground_link_weight(distance_km: float, elevation_deg_value: float) -> float:
+    def _ground_link_weight(self, distance_km: float, elevation_deg_value: float) -> float:
         # Prefer high-elevation satellites for access links so the route does not fan out
         # sideways near the horizon when a near-overhead satellite is available.
         elevation_factor = max(math.sin(math.radians(elevation_deg_value)), 0.05)
-        return distance_km / (elevation_factor ** GROUND_LINK_ELEVATION_PREFERENCE)
+        return distance_km / (elevation_factor ** self.settings.ground_link_elevation_preference)
 
     def _add_ground_access_edges(
         self,
@@ -1077,7 +1393,7 @@ class ConstellationPathViewer:
             for sat in self.satellites_by_role.get(role, []):
                 sat_pos = sat_positions[sat.node_id]
                 elev = elevation_deg(ground_pos, sat_pos)
-                if elev < MIN_ELEVATION_DEG:
+                if elev < self.settings.min_elevation_deg:
                     continue
                 link_distance = distance_km(ground_pos, sat_pos)
                 route_weight = self._ground_link_weight(link_distance, elev)
@@ -1164,7 +1480,10 @@ class ConstellationPathViewer:
     ) -> None:
         if "a" not in self.constellations or "b" not in self.constellations:
             return
-        bridge_range_km = min(self.constellation_ranges_km.get("a", DEFAULT_ISL_RANGE_KM), self.constellation_ranges_km.get("b", DEFAULT_ISL_RANGE_KM))
+        bridge_range_km = min(
+            self.constellation_ranges_km.get("a", self.settings.default_isl_range_km),
+            self.constellation_ranges_km.get("b", self.settings.default_isl_range_km),
+        )
         for sat_a in self.satellites_by_role.get("a", []):
             adjacency.setdefault(sat_a.node_id, [])
             for sat_b in self.satellites_by_role.get("b", []):
@@ -1333,8 +1652,8 @@ class ConstellationPathViewer:
         visible_count = len(route_state["visible_from_ground"]["ground_a"]) + len(route_state["visible_from_ground"]["ground_b"])
 
         max_radius = max(max(vector_norm(pos) for pos in sat_positions.values()), EARTH_RADIUS_KM)
-        camera_distance = (max_radius * 3.2) / self.zoom
-        scale = min(width, height) * 0.9 * camera_distance / (max_radius * 4.5)
+        camera_distance = (max_radius * self.settings.camera_distance_multiplier) / self.zoom
+        scale = min(width, height) * self.settings.scale_fill_ratio * camera_distance / (max_radius * self.settings.scale_divisor)
 
         projected_points: dict[str, tuple[float, float, float]] = {}
 
@@ -1348,7 +1667,7 @@ class ConstellationPathViewer:
                 p1 = project_point(*rotated_end, width, height, camera_distance, scale)
                 if p0 is None or p1 is None:
                     continue
-                self.canvas.create_line(p0[0], p0[1], p1[0], p1[1], fill="#18344d", width=1)
+                self.canvas.create_line(p0[0], p0[1], p1[0], p1[1], fill="#18344d", width=self.settings.earth_grid_line_width)
 
         render_satellites = []
         for sat in self.satellites:
@@ -1366,7 +1685,7 @@ class ConstellationPathViewer:
                 fill = "#d16dff"
             else:
                 fill = "#283744"
-            radius = 4.2 if is_active else 1.5
+            radius = self.settings.satellite_radius_active if is_active else self.settings.satellite_radius_inactive
             render_satellites.append((projected[2], projected[0], projected[1], radius, fill))
 
         for key, ground_pos in ground_positions.items():
@@ -1402,7 +1721,7 @@ class ConstellationPathViewer:
             elif segment_start.startswith("sat:"):
                 sat_role = self.satellites_by_node_id[segment_start].constellation_role
                 segment_color = "#f4a261" if sat_role == "a" else "#65d6ce"
-            self.canvas.create_line(p0[0], p0[1], p1[0], p1[1], fill=segment_color, width=3)
+            self.canvas.create_line(p0[0], p0[1], p1[0], p1[1], fill=segment_color, width=self.settings.route_line_width)
 
         for ground_key, label in (("ground_a", self.ground_a.name), ("ground_b", self.ground_b.name)):
             projected = projected_points.get(ground_key)
@@ -1464,7 +1783,14 @@ class ConstellationPathViewer:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Render a dynamic satellite path between two places.")
-    parser.add_argument("config", help="Path to a JSON config file")
+    parser.add_argument("config", nargs="?", help="Path to a JSON config file")
+    parser.add_argument(
+        "--emtpy-config",
+        "--empty-config",
+        dest="empty_config",
+        metavar="FILENAME",
+        help="Create a config file populated with all supported fields and current defaults, then exit",
+    )
     parser.add_argument(
         "--validate-config",
         action="store_true",
@@ -1475,15 +1801,24 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
+    if args.empty_config:
+        output_path = pathlib.Path(args.empty_config).resolve()
+        write_default_config(output_path)
+        print(f"Wrote default config to {output_path}")
+        return
+
+    if not args.config:
+        raise SystemExit("A config path is required unless --emtpy-config is used.")
+
     config_path = pathlib.Path(args.config).resolve()
     if not config_path.exists():
         raise SystemExit(f"Config file not found: {config_path}")
 
     config = load_config(config_path)
-    city_db = load_city_db(CITY_DB_PATH)
+    city_db = load_city_db(config.settings.city_db_path)
     constellations = load_constellations(config)
-    ground_a = resolve_place(config.place_a, city_db)
-    ground_b = resolve_place(config.place_b, city_db)
+    ground_a = resolve_place(config.place_a, city_db, config.settings.city_db_path)
+    ground_b = resolve_place(config.place_b, city_db, config.settings.city_db_path)
 
     if args.validate_config:
         print(
@@ -1503,8 +1838,7 @@ def main() -> None:
                     "constellation_a": str(config.constellation_a),
                     "constellation_b": str(config.constellation_b),
                     "constellation_ixp": str(config.constellation_ixp) if config.constellation_ixp else None,
-                    "conservative_switch_threshold": config.conservative_switch_threshold,
-                    "city_db": str(CITY_DB_PATH),
+                    "settings": config.settings.to_json_dict(),
                     "renderable_shells": {
                         constellation.role: len(constellation.shells)
                         for constellation in constellations
@@ -1523,8 +1857,7 @@ def main() -> None:
         ground_b,
         constellations,
         same_constellation_mode=(config.constellation_a == config.constellation_b),
-        conservative_switch_threshold=config.conservative_switch_threshold,
-        log_dir=LOG_DIR,
+        settings=config.settings,
         run_label=run_label,
     )
     viewer._redraw()
