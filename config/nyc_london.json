@@ -1,0 +1,8 @@
+{
+  "place_a": "New York City, USA",
+  "place_b": "London, UK",
+  "constellation_a": "../data/kuiper-constellation-shells.json",
+  "constellation_b": "../data/oneweb-constellation-shells.json",
+  "constellation_ixp": "../data/global-ixp-1200.json",
+  "conservative_switch_threshold": 0.05
+}
