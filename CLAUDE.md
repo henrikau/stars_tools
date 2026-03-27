@@ -24,6 +24,8 @@ This file is the entrypoint for agent-specific guidance in this repository.
 4. When task complete, update ROADMAP.md status (when applicable).
 5. Append key findings, if any, to the task file (when applicable).
 6. `/clear` and start next task.
+7. Update README.md or dedicated documentation files when behavior or
+   API changes.
 
 ## Extension Area
 
