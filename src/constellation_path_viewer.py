@@ -38,7 +38,7 @@ LIGHT_SPEED_KM_S = 299792.458
 MIN_ELEVATION_DEG = 10.0
 DEFAULT_ISL_RANGE_KM = 2600.0
 DEFAULT_INTER_PROCESSING_DELAY_US = 500.0
-EARTH_TEXTURE_STEP_DEG = 6
+EARTH_TEXTURE_STEP_DEG = 3
 GROUND_LINK_ELEVATION_PREFERENCE = 0.65
 LOG_INTERVAL_SECONDS = 15.0
 
@@ -138,10 +138,12 @@ class PathViewerSettings:
     log_dir: pathlib.Path = field(default_factory=lambda: LOG_DIR)
     earth_texture_path: pathlib.Path | None = field(default_factory=lambda: EARTH_TEXTURE_PATH)
     conservative_switch_threshold: float = 0.0
+    ixp_conservative_switch_threshold: float = 0.0
     min_elevation_deg: float = MIN_ELEVATION_DEG
     default_isl_range_km: float = DEFAULT_ISL_RANGE_KM
     default_inter_processing_delay_us: float = DEFAULT_INTER_PROCESSING_DELAY_US
     earth_texture_step_deg: int = EARTH_TEXTURE_STEP_DEG
+    earth_redraw_smoothing: float = 1.0
     ground_link_elevation_preference: float = GROUND_LINK_ELEVATION_PREFERENCE
     log_interval_seconds: float = LOG_INTERVAL_SECONDS
     initial_time_scale: float = 1.0 / 60.0
@@ -156,8 +158,8 @@ class PathViewerSettings:
     min_window_height: int = 760
     step_seconds_small: float = 300.0
     step_seconds_large: float = 1800.0
-    zoom_min: float = 0.5
-    zoom_max: float = 3.5
+    zoom_min: float = 0.25
+    zoom_max: float = 12.0
     zoom_factor: float = 1.1
     drag_sensitivity: float = 0.008
     pitch_limit_deg: float = 89.0
@@ -187,12 +189,16 @@ class PathViewerSettings:
             conservative_switch_threshold=require_non_negative_float(
                 payload, "conservative_switch_threshold", 0.0
             ),
+            ixp_conservative_switch_threshold=require_non_negative_float(
+                payload, "ixp_conservative_switch_threshold", 0.0
+            ),
             min_elevation_deg=require_non_negative_float(payload, "min_elevation_deg", MIN_ELEVATION_DEG),
             default_isl_range_km=require_positive_float(payload, "default_isl_range_km", DEFAULT_ISL_RANGE_KM),
             default_inter_processing_delay_us=require_non_negative_float(
                 payload, "default_inter_processing_delay_us", DEFAULT_INTER_PROCESSING_DELAY_US
             ),
             earth_texture_step_deg=require_positive_int(payload, "earth_texture_step_deg", EARTH_TEXTURE_STEP_DEG),
+            earth_redraw_smoothing=require_positive_float(payload, "earth_redraw_smoothing", 1.0),
             ground_link_elevation_preference=require_non_negative_float(
                 payload, "ground_link_elevation_preference", GROUND_LINK_ELEVATION_PREFERENCE
             ),
@@ -209,8 +215,8 @@ class PathViewerSettings:
             min_window_height=require_positive_int(payload, "min_window_height", 760),
             step_seconds_small=require_non_negative_float(payload, "step_seconds_small", 300.0),
             step_seconds_large=require_non_negative_float(payload, "step_seconds_large", 1800.0),
-            zoom_min=require_positive_float(payload, "zoom_min", 0.5),
-            zoom_max=require_positive_float(payload, "zoom_max", 3.5),
+            zoom_min=require_positive_float(payload, "zoom_min", 0.25),
+            zoom_max=require_positive_float(payload, "zoom_max", 12.0),
             zoom_factor=require_positive_float(payload, "zoom_factor", 1.1),
             drag_sensitivity=require_positive_float(payload, "drag_sensitivity", 0.008),
             pitch_limit_deg=require_positive_float(payload, "pitch_limit_deg", 89.0),
@@ -241,10 +247,12 @@ class PathViewerSettings:
             "log_dir": str(self.log_dir),
             "earth_texture_path": str(self.earth_texture_path) if self.earth_texture_path else None,
             "conservative_switch_threshold": self.conservative_switch_threshold,
+            "ixp_conservative_switch_threshold": self.ixp_conservative_switch_threshold,
             "min_elevation_deg": self.min_elevation_deg,
             "default_isl_range_km": self.default_isl_range_km,
             "default_inter_processing_delay_us": self.default_inter_processing_delay_us,
             "earth_texture_step_deg": self.earth_texture_step_deg,
+            "earth_redraw_smoothing": self.earth_redraw_smoothing,
             "ground_link_elevation_preference": self.ground_link_elevation_preference,
             "log_interval_seconds": self.log_interval_seconds,
             "initial_time_scale": self.initial_time_scale,
@@ -448,10 +456,12 @@ def build_default_config_payload(output_path: pathlib.Path) -> dict[str, object]
             else ""
         ),
         "conservative_switch_threshold": settings.conservative_switch_threshold,
+        "ixp_conservative_switch_threshold": settings.ixp_conservative_switch_threshold,
         "min_elevation_deg": settings.min_elevation_deg,
         "default_isl_range_km": settings.default_isl_range_km,
         "default_inter_processing_delay_us": settings.default_inter_processing_delay_us,
         "earth_texture_step_deg": settings.earth_texture_step_deg,
+        "earth_redraw_smoothing": settings.earth_redraw_smoothing,
         "ground_link_elevation_preference": settings.ground_link_elevation_preference,
         "log_interval_seconds": settings.log_interval_seconds,
         "initial_time_scale": settings.initial_time_scale,
@@ -1065,11 +1075,12 @@ class ConstellationPathViewer:
         width = self.earth_texture.width()
         height = self.earth_texture.height()
         tiles: list[tuple[float, float, float, float, str]] = []
-        for lat0 in range(-90, 90, self.settings.earth_texture_step_deg):
-            lat1 = min(90, lat0 + self.settings.earth_texture_step_deg)
+        tile_step_deg = max(1, round(self.settings.earth_texture_step_deg / self.settings.earth_redraw_smoothing))
+        for lat0 in range(-90, 90, tile_step_deg):
+            lat1 = min(90, lat0 + tile_step_deg)
             lat_center = (lat0 + lat1) / 2.0
-            for lon0 in range(-180, 180, self.settings.earth_texture_step_deg):
-                lon1 = lon0 + self.settings.earth_texture_step_deg
+            for lon0 in range(-180, 180, tile_step_deg):
+                lon1 = lon0 + tile_step_deg
                 lon_center = (lon0 + lon1) / 2.0
                 x = int(((lon_center + 180.0) / 360.0) * (width - 1))
                 y = int(((90.0 - lat_center) / 180.0) * (height - 1))
@@ -1162,9 +1173,9 @@ class ConstellationPathViewer:
         ttk.Label(controls, textvariable=self.route_status_var, style="Viewer.TLabel", wraplength=320).pack(anchor="w")
 
         legend_lines = [
-            "Orange: constellation A path",
+            "Red: constellation A path",
             "Cyan: constellation B path",
-            "Magenta: IXP bridge path",
+            "Yellow: IXP bridge satellite/path",
             "Amber: ground endpoints",
             "Dim blue-gray: inactive satellites",
             "Drag to rotate, scroll to zoom",
@@ -1414,6 +1425,12 @@ class ConstellationPathViewer:
         role: str,
         processing_delay_seconds: float,
     ) -> None:
+        if role == "ixp":
+            # IXP satellites are bridge points only. They may connect A->IXP->B,
+            # but never forward within the IXP constellation itself.
+            for sat in self.satellites_by_role.get(role, []):
+                adjacency.setdefault(sat.node_id, [])
+            return
         seen_edges: set[tuple[str, str]] = set()
         max_range_km = self.constellation_ranges_km[role]
         for sat in self.satellites_by_role.get(role, []):
@@ -1495,6 +1512,48 @@ class ConstellationPathViewer:
                 hop_delay_ms = ((hop_distance / LIGHT_SPEED_KM_S) + processing_delay_seconds) * 1000.0
                 edge_delays_ms[(sat_a.node_id, sat_b.node_id)] = hop_delay_ms
 
+    def _ixp_bridge_signature(self, path: list[str]) -> tuple[str, ...]:
+        ixp_indices = [
+            index
+            for index, node_id in enumerate(path)
+            if node_id.startswith("sat:") and self.satellites_by_node_id[node_id].constellation_role == "ixp"
+        ]
+        if not ixp_indices:
+            return ()
+        start = max(ixp_indices[0] - 1, 0)
+        end = min(ixp_indices[-1] + 2, len(path))
+        return tuple(path[start:end])
+
+    def _path_satisfies_ixp_access_policy(self, path: list[str]) -> bool:
+        ixp_indices = [
+            index
+            for index, node_id in enumerate(path)
+            if node_id.startswith("sat:") and self.satellites_by_node_id[node_id].constellation_role == "ixp"
+        ]
+        if not ixp_indices:
+            return True
+
+        first_ixp_index = ixp_indices[0]
+        last_ixp_index = ixp_indices[-1]
+        satellites_before_ixp = [
+            node_id
+            for node_id in path[1:first_ixp_index]
+            if node_id.startswith("sat:")
+        ]
+        satellites_after_ixp = [
+            node_id
+            for node_id in path[last_ixp_index + 1:-1]
+            if node_id.startswith("sat:")
+        ]
+
+        if not satellites_before_ixp or not satellites_after_ixp:
+            return False
+        if any(self.satellites_by_node_id[node_id].constellation_role != "a" for node_id in satellites_before_ixp):
+            return False
+        if any(self.satellites_by_node_id[node_id].constellation_role != "b" for node_id in satellites_after_ixp):
+            return False
+        return True
+
     def _compute_route_state(self) -> dict:
         sat_positions = {
             sat.node_id: satellite_position(sat.shell, sat.plane_index, sat.slot_index, self.time_seconds)
@@ -1555,15 +1614,22 @@ class ConstellationPathViewer:
             self._add_intra_constellation_edges(adjacency, edge_delays_ms, sat_positions, "a", processing_delay_seconds)
             self._add_intra_constellation_edges(adjacency, edge_delays_ms, sat_positions, "b", processing_delay_seconds)
             if "ixp" in self.constellations:
+                self._add_intra_constellation_edges(adjacency, edge_delays_ms, sat_positions, "ixp", processing_delay_seconds)
                 self._add_ixp_bridge_edges(adjacency, edge_delays_ms, sat_positions, processing_delay_seconds)
             else:
                 self._add_direct_constellation_bridge_edges(adjacency, edge_delays_ms, sat_positions, processing_delay_seconds)
 
         candidate_total_distance, candidate_path = dijkstra(adjacency, "ground_a", "ground_b")
+        if candidate_path and not self._path_satisfies_ixp_access_policy(candidate_path):
+            candidate_total_distance = float("inf")
+            candidate_path = []
         current_path_cost = path_cost(adjacency, self.active_path) if self.active_path else float("inf")
         use_current_path = False
         if self.active_path and math.isfinite(current_path_cost) and candidate_path:
-            threshold_factor = 1.0 - self.conservative_switch_threshold
+            threshold_value = self.conservative_switch_threshold
+            if self._ixp_bridge_signature(candidate_path) != self._ixp_bridge_signature(self.active_path):
+                threshold_value = max(threshold_value, self.settings.ixp_conservative_switch_threshold)
+            threshold_factor = 1.0 - threshold_value
             use_current_path = candidate_total_distance > current_path_cost * threshold_factor
         elif self.active_path and math.isfinite(current_path_cost) and not candidate_path:
             use_current_path = True
@@ -1653,7 +1719,13 @@ class ConstellationPathViewer:
 
         max_radius = max(max(vector_norm(pos) for pos in sat_positions.values()), EARTH_RADIUS_KM)
         camera_distance = (max_radius * self.settings.camera_distance_multiplier) / self.zoom
-        scale = min(width, height) * self.settings.scale_fill_ratio * camera_distance / (max_radius * self.settings.scale_divisor)
+        viewport_span = math.sqrt(width * height)
+        scale = (
+            viewport_span
+            * self.settings.scale_fill_ratio
+            * self.settings.camera_distance_multiplier
+            / self.settings.scale_divisor
+        )
 
         projected_points: dict[str, tuple[float, float, float]] = {}
 
@@ -1678,14 +1750,17 @@ class ConstellationPathViewer:
             projected_points[sat.node_id] = projected
             is_active = sat.node_id in route_satellites
             if sat.node_id in route_satellites_by_role["a"]:
-                fill = "#f4a261"
+                fill = "#c1121f"
             elif sat.node_id in route_satellites_by_role["b"]:
-                fill = "#65d6ce"
+                fill = "#00bcd4"
             elif sat.node_id in route_satellites_by_role["ixp"]:
-                fill = "#d16dff"
+                fill = "#ffd60a"
             else:
                 fill = "#283744"
-            radius = self.settings.satellite_radius_active if is_active else self.settings.satellite_radius_inactive
+            if sat.node_id in route_satellites_by_role["ixp"]:
+                radius = max(self.settings.satellite_radius_active * 1.8, self.settings.satellite_radius_inactive * 2.5)
+            else:
+                radius = self.settings.satellite_radius_active if is_active else self.settings.satellite_radius_inactive
             render_satellites.append((projected[2], projected[0], projected[1], radius, fill))
 
         for key, ground_pos in ground_positions.items():
@@ -1708,19 +1783,29 @@ class ConstellationPathViewer:
                 start_role = self.satellites_by_node_id[segment_start].constellation_role
                 end_role = self.satellites_by_node_id[segment_end].constellation_role
                 if "ixp" in (start_role, end_role):
-                    segment_color = "#d16dff"
+                    segment_color = "#ffd60a"
                 elif start_role == "a" and end_role == "a":
-                    segment_color = "#f4a261"
+                    segment_color = "#c1121f"
                 elif start_role == "b" and end_role == "b":
-                    segment_color = "#65d6ce"
+                    segment_color = "#00bcd4"
                 else:
-                    segment_color = "#d16dff"
+                    segment_color = "#ffd60a"
             elif segment_end.startswith("sat:"):
                 sat_role = self.satellites_by_node_id[segment_end].constellation_role
-                segment_color = "#f4a261" if sat_role == "a" else "#65d6ce"
+                if sat_role == "a":
+                    segment_color = "#c1121f"
+                elif sat_role == "b":
+                    segment_color = "#00bcd4"
+                else:
+                    segment_color = "#ffd60a"
             elif segment_start.startswith("sat:"):
                 sat_role = self.satellites_by_node_id[segment_start].constellation_role
-                segment_color = "#f4a261" if sat_role == "a" else "#65d6ce"
+                if sat_role == "a":
+                    segment_color = "#c1121f"
+                elif sat_role == "b":
+                    segment_color = "#00bcd4"
+                else:
+                    segment_color = "#ffd60a"
             self.canvas.create_line(p0[0], p0[1], p1[0], p1[1], fill=segment_color, width=self.settings.route_line_width)
 
         for ground_key, label in (("ground_a", self.ground_a.name), ("ground_b", self.ground_b.name)):

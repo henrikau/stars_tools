@@ -14,10 +14,12 @@ Common optional fields:
 - `log_dir`: override `logs/`
 - `earth_texture_path`: override the Earth texture PNG; set to `""` to disable texture lookup
 - `conservative_switch_threshold`: keep the current route unless a new route is sufficiently better
+- `ixp_conservative_switch_threshold`: extra holdback when changing the IXP bridge route
 - `min_elevation_deg`: minimum ground-to-satellite elevation
 - `default_isl_range_km`: fallback ISL range when the constellation JSON does not define one
 - `default_inter_processing_delay_us`: per-satellite forwarding and processing delay, default `500`
 - `log_interval_seconds`: CSV logging cadence
+- `earth_redraw_smoothing`: multiplier for finer Earth redraw tessellation, default `1.0`
 
 Viewer and UI knobs:
 - `initial_time_scale`
@@ -42,6 +44,7 @@ Viewer and UI knobs:
 - `route_line_width`
 - `earth_grid_line_width`
 - `earth_texture_step_deg`
+- `earth_redraw_smoothing`
 - `earth_grid_hidden_line_threshold`
 - `earth_texture_hidden_line_threshold`
 - `earth_texture_visible_vertex_threshold`

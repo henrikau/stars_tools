@@ -4,5 +4,6 @@
   "constellation_a": "../data/kuiper-constellation-shells.json",
   "constellation_b": "../data/oneweb-constellation-shells.json",
   "constellation_ixp": "../data/global-ixp-1200.json",
-  "conservative_switch_threshold": 0.05
+  "conservative_switch_threshold": 0.15,
+  "earth_redraw_smoothing": 2.0
 }

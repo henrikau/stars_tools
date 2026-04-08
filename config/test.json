@@ -2,5 +2,6 @@
   "place_a": "Trondheim, Norway",
   "place_b": "Hamilton, New Zealand",
   "constellation_a": "../data/oneweb-constellation-shells.json",
-  "constellation_b": "../data/kuiper-constellation-shells.json"
+  "constellation_b": "../data/kuiper-constellation-shells.json",
+  "earth_redraw_smoothing": 1.0
 }

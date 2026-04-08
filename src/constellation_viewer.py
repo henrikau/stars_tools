@@ -442,7 +442,7 @@ class ConstellationViewer:
         if delta == 0:
             return
         factor = 1.1 if delta > 0 else 1.0 / 1.1
-        self.zoom = clamp(self.zoom * factor, 0.5, 3.5)
+        self.zoom = clamp(self.zoom * factor, 0.25, 12.0)
         self._redraw()
 
     def _schedule_tick(self) -> None:
@@ -503,7 +503,8 @@ class ConstellationViewer:
 
         max_radius = max(orbital_radius_km(shell) for shell in selected_shells)
         camera_distance = (max_radius * 3.2) / self.zoom
-        scale = min(width, height) * 0.9 * camera_distance / (max_radius * 4.5)
+        viewport_span = math.sqrt(width * height)
+        scale = viewport_span * 0.9 * 3.2 / 4.5
 
         for start, end in self._earth_grid_segments():
             rotated_start = rotate_point(*start, yaw=self.yaw, pitch=self.pitch)
