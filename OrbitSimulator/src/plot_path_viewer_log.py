@@ -17,6 +17,7 @@ from __future__ import annotations
 import argparse
 import csv
 import pathlib
+import statistics
 import sys
 
 
@@ -152,8 +153,22 @@ def main() -> None:
     satellite_handles, satellite_labels = ax_satellites.get_legend_handles_labels()
     ax_delay.legend(delay_handles + satellite_handles, delay_labels + satellite_labels, loc="upper right")
 
+    valid_delays = [delay for delay in end_to_end_delay if delay >= 0.0]
+    if valid_delays:
+        delay_min = min(valid_delays)
+        delay_max = max(valid_delays)
+        delay_avg = statistics.mean(valid_delays)
+        delay_stddev = statistics.stdev(valid_delays) if len(valid_delays) > 1 else 0.0
+        stats_text = (
+            f"delay min={delay_min:.3f} ms, max={delay_max:.3f} ms, "
+            f"avg={delay_avg:.3f} ms, std.dev={delay_stddev:.3f} ms"
+        )
+    else:
+        stats_text = "delay min/max/avg/std.dev unavailable (no valid end-to-end delay samples)"
+
     fig.subplots_adjust(bottom=0.20, right=0.86)
-    fig.tight_layout()
+    fig.text(0.5, 0.04, stats_text, ha="center", va="center", fontsize=10, color="#4a5563")
+    fig.tight_layout(rect=(0.0, 0.08, 1.0, 1.0))
 
     if args.output:
         output_path = pathlib.Path(args.output).resolve()
