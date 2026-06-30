@@ -1,0 +1,152 @@
+{
+  "schema": "stars.bgp-minimal.d12-links.v1",
+  "description": "Link definitions for inter-domain links between d1 and d2 in the bgp-minimal example.",
+  "defaults": {
+    "time_unit": "s",
+    "capacity_unit": "bps",
+    "delay_unit": "us"
+  },
+  "links": [
+    {
+      "id": "d12_main",
+      "endpoints": ["d1", "d2"],
+      "addresses": {
+        "d1": "10.250.0.4/31",
+        "d2": "10.250.0.5/31"
+      },
+      "capacity": 10000000000,
+      "schedule": [
+        {
+          "up": 0,
+          "down": 600,
+          "delay_us": {
+            "start": 100,
+            "min": 100,
+            "end": 100
+          }
+        },
+        {
+          "up": 1200,
+          "down": 1800,
+          "delay_us": {
+            "start": 100,
+            "min": 100,
+            "end": 100
+          }
+        },
+        {
+          "up": 2400,
+          "down": 3000,
+          "delay_us": {
+            "start": 100,
+            "min": 100,
+            "end": 100
+          }
+        }
+      ],
+      "bgp": {
+        "initial_weight": 100,
+        "preference_events": [
+          {
+            "time": 500,
+            "weight": 0,
+            "active": false
+          },
+          {
+            "time": 1300,
+            "weight": 100,
+            "active": true
+          },
+          {
+            "time": 1700,
+            "weight": 0,
+            "active": false
+          },
+          {
+            "time": 2500,
+            "weight": 100,
+            "active": true
+          },
+          {
+            "time": 2900,
+            "weight": 0,
+            "active": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "d12_red",
+      "endpoints": ["d1", "d2"],
+      "addresses": {
+        "d1": "10.250.0.6/31",
+        "d2": "10.250.0.7/31"
+      },
+      "capacity": 10000000000,
+      "schedule": [
+        {
+          "up": 400,
+          "down": 1400,
+          "delay_us": {
+            "start": 100,
+            "min": 100,
+            "end": 100
+          }
+        },
+        {
+          "up": 1600,
+          "down": 2600,
+          "delay_us": {
+            "start": 100,
+            "min": 100,
+            "end": 100
+          }
+        },
+        {
+          "up": 2900,
+          "down": 3600,
+          "delay_us": {
+            "start": 100,
+            "min": 100,
+            "end": 100
+          }
+        }
+      ],
+      "bgp": {
+        "initial_weight": 0,
+        "preference_events": [
+          {
+            "time": 500,
+            "weight": 100,
+            "active": true
+          },
+          {
+            "time": 1300,
+            "weight": 0,
+            "active": false
+          },
+          {
+            "time": 1700,
+            "weight": 100,
+            "active": true
+          },
+          {
+            "time": 2500,
+            "weight": 0,
+            "active": false
+          },
+          {
+            "time": 2900,
+            "weight": 100,
+            "active": true
+          },
+          {
+            "time": 2900,
+            "weight": 100,
+            "active": true
+          }
+        ]
+      }
+    }
+  ]
+}

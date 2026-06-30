@@ -18,14 +18,17 @@
 #include "ns3/internet-apps-module.h"
 #include "ns3/v4ping.h"
 #include "bgp-minimal-scenario.h"
+#include <cmath>
+#include <fstream>
+#include <iomanip>
+#include <limits>
+#include <string>
+#include <vector>
 
 using namespace ns3;
 
 #define NS_SIM_LEN Seconds (3600)
-#define LINK_SWITCHOVER_TIME Seconds (45)
-#define LINK_SWITCHOVER_BACK_TIME Seconds (3000)
-#define LINK_FAIL_TIME Seconds (60)
-#define LINK_REPAIR_TIME Seconds (1500)
+#define DEFAULT_LINK_CONFIG_PATH "src/bgp/examples/d12-links.json"
 #define RNG_SEED 12345
 #define RNG_RUN 1
 
@@ -34,21 +37,95 @@ NS_LOG_COMPONENT_DEFINE ("BgpMinimal");
 namespace
 {
 uint32_t g_rxTotal = 0;
-uint32_t g_rxTransitionWindow = 0;
-uint32_t g_rxMainDownWindow = 0;
+BgpMinimalScenario* g_scenario = nullptr;
+std::ofstream g_icmpTrace;
+
+struct IcmpRequestSample
+{
+    ns3::Time requestTime;
+    ns3::Time replyTime;
+    ns3::Time rtt;
+    std::string activeLink;
+    bool received{false};
+};
+
+std::vector<IcmpRequestSample> g_icmpSamples;
 
 void
-OnPingRtt (ns3::Time /*rtt*/)
+RecordPingRequest ()
 {
-    const ns3::Time now = ns3::Simulator::Now ();
+    IcmpRequestSample sample;
+    sample.requestTime = ns3::Simulator::Now ();
+    sample.activeLink = g_scenario != nullptr ? g_scenario->GetActiveLinkName () : "unknown";
+    g_icmpSamples.push_back (sample);
+}
+
+void
+OnPingRtt (ns3::Time rtt)
+{
     ++g_rxTotal;
-    if ((now >= LINK_SWITCHOVER_TIME) && (now < LINK_FAIL_TIME))
+    const ns3::Time replyTime = ns3::Simulator::Now ();
+    const ns3::Time requestTime = replyTime - rtt;
+
+    std::size_t bestIndex = g_icmpSamples.size ();
+    int64_t bestDeltaNs = std::numeric_limits<int64_t>::max ();
+    for (std::size_t i = 0; i < g_icmpSamples.size (); ++i)
     {
-        ++g_rxTransitionWindow;
+        if (g_icmpSamples[i].received)
+        {
+            continue;
+        }
+        const int64_t deltaNs = std::llabs ((g_icmpSamples[i].requestTime - requestTime).GetNanoSeconds ());
+        if (deltaNs < bestDeltaNs)
+        {
+            bestDeltaNs = deltaNs;
+            bestIndex = i;
+        }
     }
-    if ((now >= LINK_FAIL_TIME) && (now < LINK_REPAIR_TIME))
+
+    if (bestIndex < g_icmpSamples.size () && bestDeltaNs <= ns3::MilliSeconds (500).GetNanoSeconds ())
     {
-        ++g_rxMainDownWindow;
+        g_icmpSamples[bestIndex].received = true;
+        g_icmpSamples[bestIndex].replyTime = replyTime;
+        g_icmpSamples[bestIndex].rtt = rtt;
+    }
+}
+
+void
+SchedulePingRequestMarkers (ns3::Time windowStart, ns3::Time windowEnd)
+{
+    for (ns3::Time t = windowStart; t < windowEnd; t += ns3::Seconds (1))
+    {
+        ns3::Simulator::Schedule (t, &RecordPingRequest);
+    }
+}
+
+void
+WriteIcmpTrace ()
+{
+    g_icmpTrace << "simulated_time,active_link,RTT,status,request_time,reply_time\n";
+    for (std::size_t i = 1; i < g_icmpSamples.size (); ++i)
+    {
+        const IcmpRequestSample& sample = g_icmpSamples[i];
+        g_icmpTrace << std::fixed << std::setprecision (9);
+        if (sample.received)
+        {
+            g_icmpTrace << sample.replyTime.GetSeconds () << ","
+                        << sample.activeLink << ","
+                        << sample.rtt.GetSeconds () << ","
+                        << "received,"
+                        << sample.requestTime.GetSeconds () << ","
+                        << sample.replyTime.GetSeconds () << "\n";
+        }
+        else
+        {
+            g_icmpTrace << sample.requestTime.GetSeconds () << ","
+                        << sample.activeLink << ","
+                        << ","
+                        << "lost,"
+                        << sample.requestTime.GetSeconds () << ","
+                        << "\n";
+        }
     }
 }
 
@@ -69,23 +146,16 @@ ExpectedPingReplies (ns3::Time windowStart, ns3::Time windowEnd)
 
 int main (int argc, char *argv[])
 {
-    bool enableProactiveSwitchover = true;
-    double switchoverTimeSeconds = 45.0;
-    double switchoverBackTimeSeconds = 3000.0;
+    std::string linkConfigPath = DEFAULT_LINK_CONFIG_PATH;
+    std::string icmpTracePath = "icmp-delay.csv";
     CommandLine cmd;
-    cmd.AddValue ("enableProactiveSwitchover",
-                  "Enable scheduled system switchover events",
-                  enableProactiveSwitchover);
-    cmd.AddValue ("switchoverTimeSeconds",
-                  "Time to switch d12_main -> d12_red",
-                  switchoverTimeSeconds);
-    cmd.AddValue ("switchoverBackTimeSeconds",
-                  "Time to switch d12_red -> d12_main",
-                  switchoverBackTimeSeconds);
+    cmd.AddValue ("linkConfigPath",
+                  "Path to d1-d2 link schedule JSON file",
+                  linkConfigPath);
+    cmd.AddValue ("icmpTracePath",
+                  "CSV output path for ICMP RTT samples",
+                  icmpTracePath);
     cmd.Parse (argc, argv);
-
-    const Time switchoverTime = Seconds (switchoverTimeSeconds);
-    const Time switchoverBackTime = Seconds (switchoverBackTimeSeconds);
 
     // Deterministic simulation settings for repeatable failover experiments.
     RngSeedManager::SetSeed (RNG_SEED);
@@ -97,6 +167,8 @@ int main (int argc, char *argv[])
     LogComponentEnable ("Bgp", LOG_LEVEL_INFO); // session
 
     BgpMinimalScenario scenario;
+    g_scenario = &scenario;
+    scenario.LoadLinkConfig (linkConfigPath);
     NS_LOG_INFO ("Create nodes for AS routers and internal hosts");
     NS_LOG_INFO ("Create CSMA links (IXP and LANs)");
     scenario.BuildTopology ();
@@ -105,49 +177,30 @@ int main (int argc, char *argv[])
     scenario.ConfigureBgp (NS_SIM_LEN);
 
     V4PingHelper ping (scenario.GetPingDestinationAddress ());
-    ping.SetAttribute("Verbose", BooleanValue (true));
     ApplicationContainer ping_apps = ping.Install (scenario.GetPingSourceNode ());
     ping_apps.Start (Seconds (10));
     ping_apps.Stop (NS_SIM_LEN);
     Ptr<V4Ping> ping_app = DynamicCast<V4Ping> (ping_apps.Get (0));
     NS_ABORT_MSG_IF (ping_app == nullptr, "Failed to access V4Ping application instance");
+    g_icmpTrace.open (icmpTracePath.c_str (), std::ios::out | std::ios::trunc);
+    NS_ABORT_MSG_IF (!g_icmpTrace.is_open (), "Failed to open ICMP trace CSV: " << icmpTracePath);
     ping_app->TraceConnectWithoutContext ("Rtt", MakeCallback (&OnPingRtt));
+    SchedulePingRequestMarkers (Seconds (10), NS_SIM_LEN);
 
-    if (enableProactiveSwitchover)
-    {
-        scenario.SetSwitchoverWindow (switchoverTime,
-                                      switchoverTime,
-                                      LINK_FAIL_TIME);
-        NS_ABORT_MSG_IF (!scenario.HasValidSwitchoverWindow (),
-                         "Invalid switchover window: expected intent <= activation < failure");
-        scenario.ScheduleLinkChange (BgpMinimalScenario::LinkId::MAIN,
-                                     BgpMinimalScenario::LinkId::REDUNDANT,
-                                     switchoverTime);
-        scenario.ScheduleLinkChange (BgpMinimalScenario::LinkId::REDUNDANT,
-                                     BgpMinimalScenario::LinkId::MAIN,
-                                     switchoverBackTime);
-    }
-
-    // Schedule link failure and repair
-    scenario.ScheduleEvents (LINK_FAIL_TIME, LINK_REPAIR_TIME);
+    scenario.ScheduleConfiguredEvents (NS_SIM_LEN);
 
     NS_LOG_INFO ("Running simulation...");
     Simulator::Run();
 
     const uint32_t expectedTotal = ExpectedPingReplies (Seconds (10), NS_SIM_LEN);
-    const uint32_t expectedTransition = ExpectedPingReplies (LINK_SWITCHOVER_TIME, LINK_FAIL_TIME);
-    const uint32_t expectedMainDown = ExpectedPingReplies (LINK_FAIL_TIME, LINK_REPAIR_TIME);
     NS_LOG_UNCOND ("[ICMP][SUMMARY] total_rx=" << g_rxTotal
                   << " total_expected=" << expectedTotal
                   << " total_lost=" << (expectedTotal - g_rxTotal));
-    NS_LOG_UNCOND ("[ICMP][SUMMARY] transition_rx=" << g_rxTransitionWindow
-                  << " transition_expected=" << expectedTransition
-                  << " transition_lost=" << (expectedTransition - g_rxTransitionWindow));
-    NS_LOG_UNCOND ("[ICMP][SUMMARY] main_down_rx=" << g_rxMainDownWindow
-                  << " main_down_expected=" << expectedMainDown
-                  << " main_down_lost=" << (expectedMainDown - g_rxMainDownWindow));
 
     NS_LOG_INFO ("Simulation ended. Cleaning up...");
+    WriteIcmpTrace ();
+    g_icmpTrace.close ();
+    g_scenario = nullptr;
     Simulator::Destroy();
     return 0;
 }

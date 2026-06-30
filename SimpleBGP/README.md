@@ -1,27 +1,50 @@
-# STARS Experiments
+# STARS BGP Examples
 
-STARS is the canonical edit location for custom BGP simulation experiments in this repository.
+This folder contains minimal, ready-to-use BGP example code for the ns-3 simulator.
 
-Do not edit files in src/bgp/examples directly. Those files are synced artifacts copied from STARS by stars.sh.
+## Simulated network
+![SimpleBGP](bgp-minimal-example.png)
 
-## Structure
+## Files
 
-- bgp-minimal/
-  - README.md: example-specific behavior, knobs, and verification notes.
-  - wscript: example build wiring synced into src/bgp/examples.
-  - bgp-minimal-example.cc: simulation entrypoint.
-  - bgp-minimal-scenario.h/.cc: scenario orchestration and event scheduling.
-  - bgp-minimal-state.h: shared scenario runtime state.
-  - ns3helper-network.h: link/interface utility helpers.
-  - bgp-minimal-example.drawio: topology diagram.
+- **bgp-minimal-example.cc**: simulation entrypoint, runtime knobs, deterministic seed/run, ICMP summaries.
+- **bgp-minimal-scenario.h/.cc**: scenario engine, system/scenario events, switchover scheduling.
+- **bgp-minimal-state.h**: scenario state and event-stage progression.
 
-## Workflow
+## Quick Start (STARS-only edit flow)
 
-1. Make edits under STARS/bgp-minimal/.
-2. Sync and run with:
 
 ```bash
-./stars.sh
+NS3_DIR=/path/to/ns-3-dev ./run.sh
 ```
 
-This command copies the minimal example files into src/bgp/examples/, refreshes wscript, and runs bgp-minimal-example.
+
+`run.sh` copies the STARS example files into `${NS3_DIR}/src/bgp/examples/`,
+refreshes `wscript`, builds, and runs `bgp-minimal-example`.
+
+## Runtime Knobs
+
+The minimal runner accepts:
+
+- `--link-config PATH`: path to the d1-d2 link schedule JSON.
+- `--icmp-trace PATH`: CSV output path for ICMP RTT/loss samples.
+- `--help`: show runner help.
+
+Example:
+
+```bash
+NS3_DIR="/path/to/ns-3-dev" ./run.sh \
+  --link-config bgp-minimal/d12-links.json \
+  --icmp-trace /tmp/icmp-delay.csv
+```
+
+## Visualizing the results
+
+The links (in d12-links.json) can be visualized and overlaid with the
+results from the simulated links:
+```bash
+
+  python3 visualize_links.py d12-links.json --icmp-delay /tmp/icmp-delay.csv -o test.png
+```
+
+![Link delays](bgp-link-delay.png)
