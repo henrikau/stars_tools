@@ -1,0 +1,161 @@
+{
+  "schema": "stars.bgp-aspath-convergence.topology",
+  "schema_version": 1,
+  "description": "Default six-AS topology for AS_PATH propagation and convergence experiments.",
+  "addressing": {
+    "inter_as": {
+      "rule": "For link asX-asY where X < Y, use subnet 10.X.Y.0/30. The lower-numbered AS endpoint uses 10.X.Y.1 and the higher-numbered AS endpoint uses 10.X.Y.2.",
+      "prefix_length": 30
+    }
+  },
+  "ases": [
+    {
+      "id": "as1",
+      "asn": 1,
+      "router_id": "r-as1",
+      "bgp_router_id": "1.1.1.1",
+      "lan_prefixes": [
+        {
+          "id": "as1-lan",
+          "prefix": "192.168.1.0/24",
+          "role": "observer-lan",
+          "capacity": "1Gbps",
+          "delay": "100us"
+        }
+      ]
+    },
+    {
+      "id": "as2",
+      "asn": 2,
+      "router_id": "r-as2",
+      "bgp_router_id": "2.2.2.2",
+      "lan_prefixes": []
+    },
+    {
+      "id": "as3",
+      "asn": 3,
+      "router_id": "r-as3",
+      "bgp_router_id": "3.3.3.3",
+      "lan_prefixes": []
+    },
+    {
+      "id": "as4",
+      "asn": 4,
+      "router_id": "r-as4",
+      "bgp_router_id": "4.4.4.4",
+      "lan_prefixes": []
+    },
+    {
+      "id": "as5",
+      "asn": 5,
+      "router_id": "r-as5",
+      "bgp_router_id": "5.5.5.5",
+      "lan_prefixes": []
+    },
+    {
+      "id": "as6",
+      "asn": 6,
+      "router_id": "r-as6",
+      "bgp_router_id": "6.6.6.6",
+      "lan_prefixes": [
+        {
+          "id": "as6-lan",
+          "prefix": "192.168.6.0/24",
+          "role": "origin-lan",
+          "capacity": "1Gbps",
+          "delay": "100us"
+        }
+      ]
+    }
+  ],
+  "origin_prefixes": [
+    {
+      "id": "as6-origin",
+      "origin_as": "as6",
+      "prefix": "192.168.6.0/24",
+      "lan_id": "as6-lan"
+    }
+  ],
+  "links": [
+    {
+      "id": "as1-as4",
+      "endpoints": [
+        "as1",
+        "as4"
+      ],
+      "capacity": "10Gbps",
+      "delay": "5ms",
+      "initial_bgp_weight": 80
+    },
+    {
+      "id": "as1-as2",
+      "endpoints": [
+        "as1",
+        "as2"
+      ],
+      "capacity": "10Gbps",
+      "delay": "5ms",
+      "initial_bgp_weight": 90
+    },
+    {
+      "id": "as2-as4",
+      "endpoints": [
+        "as2",
+        "as4"
+      ],
+      "capacity": "10Gbps",
+      "delay": "5ms",
+      "initial_bgp_weight": 85
+    },
+    {
+      "id": "as2-as3",
+      "endpoints": [
+        "as2",
+        "as3"
+      ],
+      "capacity": "10Gbps",
+      "delay": "5ms",
+      "initial_bgp_weight": 85
+    },
+    {
+      "id": "as2-as5",
+      "endpoints": [
+        "as2",
+        "as5"
+      ],
+      "capacity": "10Gbps",
+      "delay": "5ms",
+      "initial_bgp_weight": 90
+    },
+    {
+      "id": "as3-as6",
+      "endpoints": [
+        "as3",
+        "as6"
+      ],
+      "capacity": "10Gbps",
+      "delay": "5ms",
+      "initial_bgp_weight": 95
+    },
+    {
+      "id": "as5-as6",
+      "endpoints": [
+        "as5",
+        "as6"
+      ],
+      "capacity": "10Gbps",
+      "delay": "5ms",
+      "initial_bgp_weight": 90
+    },
+    {
+      "id": "as2-as6",
+      "endpoints": [
+        "as2",
+        "as6"
+      ],
+      "capacity": "10Gbps",
+      "delay": "5ms",
+      "initial_bgp_weight": 100
+    }
+  ]
+}
