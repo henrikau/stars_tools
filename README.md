@@ -17,6 +17,4 @@ Do not use simulation results from these tools to drive actual technical, operat
 
 **Repository Layout**
 - `OrbitSimulator/`: Python constellation viewers and plotting tools for rough orbit, path, and latency inspection. See [OrbitSimulator/README.md](OrbitSimulator/README.md).
-- Future standalone NS-3 simulators should live in their own top-level subdirectories with local build and run instructions.
-
-Each subdirectory is intended to be self-contained. Start with the README in the tool or simulator directory you want to use.
+- `SimpleBGP` : Standalone NS-3 simulator for a small BGP example of 3. ASes and traffic flowing between them. Multiple links are brought up and down

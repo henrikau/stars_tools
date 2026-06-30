@@ -1,0 +1,27 @@
+# -*- Mode: python; py-indent-offset: 4; indent-tabs-mode: nil; coding: utf-8; -*-
+
+def build(bld):
+    obj = bld.create_ns3_program('bgp-example', ['bgp', 'csma'])
+    obj.source = 'bgp-example.cc'
+
+    # need internet-apps for V4PingHelper
+    obj = bld.create_ns3_program('bgp-minimal-example', ['bgp', 'csma', 'internet-apps'])
+    sources = ['bgp-minimal-example.cc']
+
+    # When refactoring splits setup/orchestration, include companion implementation.
+    if bld.path.find_resource('bgp-minimal-scenario.cc'):
+        sources.append('bgp-minimal-scenario.cc')
+
+    obj.source = sources
+
+    orbital_sources = [
+        'stars-orbital/examples/orbital-isl-minimal-example.cc',
+        'stars-orbital/model/orbital-satellite.cc',
+        'stars-orbital/model/orbital-isl-link.cc',
+        'stars-orbital/model/orbital-link-manager.cc',
+    ]
+    if all(bld.path.find_resource(s) for s in orbital_sources):
+        obj = bld.create_ns3_program(
+            'orbital-isl-minimal-example',
+            ['core', 'network', 'internet', 'internet-apps', 'mobility', 'point-to-point'])
+        obj.source = orbital_sources
